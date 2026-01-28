@@ -1,0 +1,295 @@
+@using BorsaPortal.Domain.Entities
+@{
+    ViewBag.Title = "İşlem Geçmişi";
+    var transactions = ViewBag.Transactions as List<PortfolioItem>;
+    var companies = ViewBag.Companies as List<string>;
+    var startDate = ViewBag.StartDate as string;
+    var endDate = ViewBag.EndDate as string;
+    var companyCode = ViewBag.CompanyCode as string;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-clock-history"></i> İşlem Geçmişi</h2>
+                <p class="text-muted">Tüm alım satım işlemlerinizi görüntüleyin ve filtreleyin</p>
+            </div>
+            <div>
+                <a href="@Url.Action("Index", "Reports")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Geri
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="bi bi-printer"></i> Yazdır
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtreler</h5>
+    </div>
+    <div class="card-body">
+        @using (Html.BeginForm("TransactionHistory", "Reports", FormMethod.Get, new { @class = "row g-3 align-items-end" }))
+        {
+            <div class="col-md-3">
+                <label class="form-label">Başlangıç Tarihi</label>
+                <input type="date" name="startDate" class="form-control" value="@startDate" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Bitiş Tarihi</label>
+                <input type="date" name="endDate" class="form-control" value="@endDate" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Şirket</label>
+                <select name="companyCode" class="form-select">
+                    <option value="">Tümü</option>
+                    @if (companies != null)
+                    {
+                        foreach (var company in companies)
+                        {
+                            <option value="@company" @(company == companyCode ? "selected" : "")>@company</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Ara
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Summary Cards -->
+@if (transactions != null && transactions.Any())
+{
+    var totalCost = transactions.Sum(t => t.TotalCost);
+    var totalCurrentValue = transactions.Sum(t => t.CurrentValue);
+    var totalProfitLoss = totalCurrentValue - totalCost;
+    var totalQuantity = transactions.Sum(t => t.Quantity);
+
+    <div class="row mb-4 g-3">
+        <div class="col-6 col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small mb-2">Toplam İşlem</h6>
+                    <h3 class="mb-0 text-primary">@transactions.Count</h3>
+                    <small class="text-muted">alım işlemi</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small mb-2">Toplam Adet</h6>
+                    <h3 class="mb-0 text-info">@totalQuantity.ToString("N0")</h3>
+                    <small class="text-muted">hisse adedi</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small mb-2">Toplam Maliyet</h6>
+                    <h3 class="mb-0 text-warning">₺@totalCost.ToString("N2")</h3>
+                    <small class="text-muted">yatırım tutarı</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-@(totalProfitLoss >= 0 ? "success" : "danger")">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small mb-2">Toplam K/Z</h6>
+                    <h3 class="mb-0 text-@(totalProfitLoss >= 0 ? "success" : "danger")">
+                        @(totalProfitLoss >= 0 ? "+" : "")₺@totalProfitLoss.ToString("N2")
+                    </h3>
+                    <small class="text-muted">net kazanç</small>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Transactions Table -->
+@if (transactions != null && transactions.Any())
+{
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> İşlem Listesi (@transactions.Count)</h5>
+            <div>
+                <span class="badge bg-secondary">@DateTime.Parse(startDate).ToString("dd.MM.yyyy") - @DateTime.Parse(endDate).ToString("dd.MM.yyyy")</span>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm mb-0" id="transactionsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>
+                                <i class="bi bi-calendar3"></i> Tarih
+                            </th>
+                            <th>
+                                <i class="bi bi-building"></i> Şirket
+                            </th>
+                            <th>
+                                <i class="bi bi-diagram-3"></i> Sektör
+                            </th>
+                            <th class="text-end">
+                                <i class="bi bi-boxes"></i> Adet
+                            </th>
+                            <th class="text-end">
+                                <i class="bi bi-currency-dollar"></i> Alış Fiyatı
+                            </th>
+                            <th class="text-end">
+                                <i class="bi bi-cash-stack"></i> Toplam Maliyet
+                            </th>
+                            <th class="text-end">
+                                <i class="bi bi-graph-up"></i> Güncel Fiyat
+                            </th>
+                            <th class="text-end">
+                                <i class="bi bi-wallet2"></i> Güncel Değer
+                            </th>
+                            <th class="text-end">
+                                <i class="bi bi-graph-up-arrow"></i> K/Z
+                            </th>
+                            <th class="text-end">
+                                <i class="bi bi-percent"></i> K/Z %
+                            </th>
+                            <th class="text-end">
+                                <i class="bi bi-clock"></i> Son Güncelleme
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var transaction in transactions)
+                        {
+                            <tr>
+                                <td>
+                                    <span class="badge bg-light text-dark">
+                                        @transaction.BuyDate.ToString("dd.MM.yyyy")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div>
+                                        <strong class="text-primary">@transaction.Company.Code</strong>
+                                        <br />
+                                        <small class="text-muted">@transaction.Company.Name</small>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@(transaction.Company.Sector?.Name ?? "N/A")</span>
+                                </td>
+                                <td class="text-end">
+                                    <strong>@transaction.Quantity.ToString("N2")</strong>
+                                </td>
+                                <td class="text-end">
+                                    ₺@transaction.AverageBuyPrice.ToString("N2")
+                                </td>
+                                <td class="text-end">
+                                    <strong>₺@transaction.TotalCost.ToString("N2")</strong>
+                                </td>
+                                <td class="text-end">
+                                    ₺@transaction.CurrentPrice.ToString("N2")
+                                </td>
+                                <td class="text-end">
+                                    <strong>₺@transaction.CurrentValue.ToString("N2")</strong>
+                                </td>
+                                <td class="text-end">
+                                    <span class="fw-bold @(transaction.ProfitLoss >= 0 ? "text-success" : "text-danger")">
+                                        @(transaction.ProfitLoss >= 0 ? "+" : "")₺@transaction.ProfitLoss.ToString("N2")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge @(transaction.ProfitLossPercentage >= 0 ? "bg-success" : "bg-danger")">
+                                        @(transaction.ProfitLossPercentage >= 0 ? "+" : "")@transaction.ProfitLossPercentage.ToString("N2")%
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <small class="text-muted">
+                                        @(transaction.LastPriceUpdate?.ToString("dd.MM.yyyy HH:mm") ?? "N/A")
+                                    </small>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light fw-bold">
+                        <tr>
+                            <td colspan="3" class="text-end">TOPLAM:</td>
+                            <td class="text-end">@transactions.Sum(t => t.Quantity).ToString("N2")</td>
+                            <td></td>
+                            <td class="text-end">₺@transactions.Sum(t => t.TotalCost).ToString("N2")</td>
+                            <td></td>
+                            <td class="text-end">₺@transactions.Sum(t => t.CurrentValue).ToString("N2")</td>
+                            <td class="text-end text-@((transactions.Sum(t => t.CurrentValue) - transactions.Sum(t => t.TotalCost)) >= 0 ? "success" : "danger")">
+                                @((transactions.Sum(t => t.CurrentValue) - transactions.Sum(t => t.TotalCost)) >= 0 ? "+" : "")₺@(transactions.Sum(t => t.CurrentValue) - transactions.Sum(t => t.TotalCost)).ToString("N2")
+                            </td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.2;"></i>
+            <h5 class="mt-3 text-muted">İşlem Bulunamadı</h5>
+            <p class="text-muted">Belirtilen kriterlere uygun işlem bulunamadı</p>
+            <a href="@Url.Action("TransactionHistory", "Reports")" class="btn btn-primary">
+                <i class="bi bi-arrow-clockwise"></i> Filtreleri Temizle
+            </a>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (transactions != null && transactions.Any())
+    {
+        <script>
+            // Add export functionality
+            function exportToCSV() {
+                var table = document.getElementById('transactionsTable');
+                var csv = [];
+                var rows = table.querySelectorAll('tr');
+
+                for (var i = 0; i < rows.length; i++) {
+                    var row = [], cols = rows[i].querySelectorAll('td, th');
+                    for (var j = 0; j < cols.length; j++) {
+                        row.push(cols[j].innerText);
+                    }
+                    csv.push(row.join(','));
+                }
+
+                var csvFile = new Blob([csv.join('\n')], { type: 'text/csv' });
+                var downloadLink = document.createElement('a');
+                downloadLink.download = 'islem-gecmisi-' + new Date().toISOString().split('T')[0] + '.csv';
+                downloadLink.href = window.URL.createObjectURL(csvFile);
+                downloadLink.style.display = 'none';
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+            }
+        </script>
+    }
+}
+
+@section Styles {
+    <style>
+        @@media print {
+            .btn, .card-header, .table-light {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+}

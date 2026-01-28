@@ -1,0 +1,268 @@
+@model BorsaPortal.Web.Areas.Admin.ViewModels.CompanyViewModel
+
+@{
+    ViewBag.Title = "Yeni Şirket Ekle";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Yeni Şirket Ekle</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-body">
+                @using (Html.BeginForm("Create", "Company", FormMethod.Post, new { @class = "needs-validation" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.Code, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.Code, new { @class = "form-control", placeholder = "Örn: THYAO" })
+                            @Html.ValidationMessageFor(model => model.Code, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.Name, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.Name, new { @class = "form-control", placeholder = "Örn: Türk Hava Yolları" })
+                            @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.SectorId, new { @class = "form-label" })
+                            @Html.DropDownListFor(model => model.SectorId, Model.Sectors, "-- Sektör Seçiniz --", new { @class = "form-select" })
+                            @Html.ValidationMessageFor(model => model.SectorId, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.PaidInCapital, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.PaidInCapital, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.PaidInCapital, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.Website, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.Website, new { @class = "form-control", type = "url", placeholder = "https://example.com" })
+                            @Html.ValidationMessageFor(model => model.Website, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.LogoUrl, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.LogoUrl, new { @class = "form-control", type = "url", placeholder = "https://example.com/logo.png" })
+                            @Html.ValidationMessageFor(model => model.LogoUrl, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Description, new { @class = "form-label" })
+                        @Html.TextAreaFor(model => model.Description, new { @class = "form-control", rows = 4 })
+                        @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                    </div>
+
+                    <hr class="my-4" />
+                    <div class="mb-3">
+                        <h5 class="mb-2">Finansal Veriler</h5>
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Not:</strong> Türk hisse senetleri için finansal veriler manuel olarak girilmelidir.
+                            Finansal verilere <a href="https://www.kap.org.tr/tr/bist-sirketler" target="_blank" class="alert-link">KAP (Kamuyu Aydınlatma Platformu)</a>
+                            üzerinden ulaşabilirsiniz.
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.Equity, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.Equity, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.Equity, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.YearlyNetProfit, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.YearlyNetProfit, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.YearlyNetProfit, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.QuarterlyNetProfit, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.QuarterlyNetProfit, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.QuarterlyNetProfit, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.YearlySales, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.YearlySales, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.YearlySales, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.CurrentMarketValue, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.CurrentMarketValue, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.CurrentMarketValue, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.LastFinancialUpdate, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.LastFinancialUpdate, new { @class = "form-control", type = "datetime-local" })
+                            @Html.ValidationMessageFor(model => model.LastFinancialUpdate, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+                    <h5 class="mb-3">Hesaplanan Oranlar</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.PERatio, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.PERatio, new { @class = "form-control", type = "text", placeholder = "Örn: 3,5 veya 3.5" })
+                            @Html.ValidationMessageFor(model => model.PERatio, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">Ondalık sayılar için virgül (3,5) veya nokta (3.5) kullanabilirsiniz.</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.PBRatio, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.PBRatio, new { @class = "form-control", type = "text", placeholder = "Örn: 0,50 veya 0.50" })
+                            @Html.ValidationMessageFor(model => model.PBRatio, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">Ondalık sayılar için virgül (0,50) veya nokta (0.50) kullanabilirsiniz.</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+                    <h5 class="mb-3">Geçmiş Yıl Net Kar Verileri</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.NetProfitYear1, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.NetProfitYear1, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.NetProfitYear1, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.NetProfitYear2, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.NetProfitYear2, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.NetProfitYear2, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.NetProfitYear3, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.NetProfitYear3, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.NetProfitYear3, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.NetProfitYear4, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.NetProfitYear4, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.NetProfitYear4, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+                    <h5 class="mb-3">Geçmiş Yıl Özsermaye Verileri</h5>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.EquityYear1, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.EquityYear1, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.EquityYear1, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.EquityYear2, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.EquityYear2, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.EquityYear2, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.EquityYear3, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.EquityYear3, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.EquityYear3, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.EquityYear4, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.EquityYear4, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.EquityYear4, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <hr class="my-4" />
+                    <h5 class="mb-3">Geçmiş Yıl F/K Oranları</h5>
+
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            @Html.LabelFor(model => model.PEYear1, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.PEYear1, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.PEYear1, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            @Html.LabelFor(model => model.PEYear2, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.PEYear2, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.PEYear2, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            @Html.LabelFor(model => model.PEYear3, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.PEYear3, new { @class = "form-control", type = "text", placeholder = "Ondalık sayı için virgül veya nokta kullanabilirsiniz" })
+                            @Html.ValidationMessageFor(model => model.PEYear3, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary me-md-2">İptal</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Kaydet
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        $(document).ready(function() {
+            // Form submit edilmeden önce decimal alanları normalize et (virgülleri noktaya çevir)
+            $('form').on('submit', function(e) {
+                console.log('Form submitting - normalizing decimal fields...');
+
+                // Tüm text input alanlarını kontrol et
+                $(this).find('input[type="text"]').each(function() {
+                    var $input = $(this);
+                    var value = $input.val();
+
+                    // Eğer değer varsa ve sayısal görünüyorsa, virgülleri noktaya çevir
+                    if (value && value.trim() !== '') {
+                        // Virgülleri noktaya çevir
+                        var normalizedValue = value.replace(/,/g, '.');
+
+                        // Sadece sayı, nokta ve eksi işareti içeren değerleri normalize et
+                        if (/^-?\d+([.,]\d+)?$/.test(value)) {
+                            $input.val(normalizedValue);
+                            console.log('Normalized field:', $input.attr('name'), 'from', value, 'to', normalizedValue);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

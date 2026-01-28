@@ -1,0 +1,184 @@
+@model List<BorsaPortal.Web.Controllers.FavoriteViewModel>
+
+@{
+    ViewBag.Title = "Favorilerim";
+    var filterType = ViewBag.FilterType as string;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="bi bi-bookmark-fill"></i> Favorilerim</h2>
+        <p class="text-muted">Kaydettiğiniz haberler, KAP bildirimleri ve blog yazıları</p>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Filter Tabs -->
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link @(string.IsNullOrEmpty(filterType) ? "active" : "")" href="@Url.Action("Index")">
+            <i class="bi bi-collection"></i> Tümü (@Model.Count)
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(filterType == "News" ? "active" : "")" href="@Url.Action("Index", new { type = "News" })">
+            <i class="bi bi-newspaper"></i> Haberler (@Model.Count(f => f.EntityType == "News"))
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(filterType == "KapNotification" ? "active" : "")" href="@Url.Action("Index", new { type = "KapNotification" })">
+            <i class="bi bi-megaphone"></i> KAP Bildirimleri (@Model.Count(f => f.EntityType == "KapNotification"))
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link @(filterType == "BlogPost" ? "active" : "")" href="@Url.Action("Index", new { type = "BlogPost" })">
+            <i class="bi bi-journal-text"></i> Blog Yazıları (@Model.Count(f => f.EntityType == "BlogPost"))
+        </a>
+    </li>
+</ul>
+
+@if (Model != null && Model.Any())
+{
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-12 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-1 text-center">
+                                @if (item.EntityType == "News")
+                                {
+                                    <i class="bi bi-newspaper text-primary" style="font-size: 2rem;"></i>
+                                }
+                                else if (item.EntityType == "KapNotification")
+                                {
+                                    <i class="bi bi-megaphone text-success" style="font-size: 2rem;"></i>
+                                }
+                                else if (item.EntityType == "BlogPost")
+                                {
+                                    <i class="bi bi-journal-text text-info" style="font-size: 2rem;"></i>
+                                }
+                            </div>
+                            <div class="col-md-9">
+                                <span class="badge bg-secondary mb-2">@GetEntityTypeDisplay(item.EntityType)</span>
+                                <h5 class="card-title mb-2">
+                                    <a href="@item.Url" class="text-decoration-none">@item.Title</a>
+                                </h5>
+                                @if (item.PublishedDate.HasValue)
+                                {
+                                    <small class="text-muted">
+                                        <i class="bi bi-calendar"></i> @item.PublishedDate.Value.ToString("dd MMMM yyyy HH:mm")
+                                    </small>
+                                }
+                                @if (!string.IsNullOrEmpty(item.Notes))
+                                {
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="bi bi-sticky"></i> <em>@item.Notes</em>
+                                        </small>
+                                    </div>
+                                }
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        <i class="bi bi-bookmark-fill text-warning"></i> Favorilere eklendi: @item.AddedAt.ToString("dd.MM.yyyy HH:mm")
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <a href="@item.Url" class="btn btn-sm btn-outline-primary mb-2">
+                                    <i class="bi bi-eye"></i> Görüntüle
+                                </a>
+                                <br />
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="deleteItem(@item.Id, '@item.Title.Replace("'", "\\'"))')">
+                                    <i class="bi bi-trash"></i> Çıkar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination could be added here if needed -->
+}
+else
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-bookmark" style="font-size: 4rem; opacity: 0.2;"></i>
+            <h5 class="mt-3 text-muted">
+                @if (string.IsNullOrEmpty(filterType))
+                {
+                    <text>Henüz Favori İçerik Yok</text>
+                }
+                else
+                {
+                    <text>Bu kategoride favori içerik yok</text>
+                }
+            </h5>
+            <p class="text-muted">
+                Beğendiğiniz haberler, KAP bildirimleri ve blog yazılarını favorilerinize ekleyerek daha sonra kolayca ulaşabilirsiniz.
+            </p>
+            <a href="@Url.Action("Index", "News")" class="btn btn-primary me-2">
+                <i class="bi bi-newspaper"></i> Haberlere Git
+            </a>
+            <a href="@Url.Action("Index", "Kap")" class="btn btn-success me-2">
+                <i class="bi bi-megaphone"></i> KAP Bildirimlerine Git
+            </a>
+            <a href="@Url.Action("Index", "Blog")" class="btn btn-info">
+                <i class="bi bi-journal-text"></i> Blog'a Git
+            </a>
+        </div>
+    </div>
+}
+
+<!-- Delete Confirmation -->
+<form id="deleteForm" method="post" action="@Url.Action("Delete", "Favorites")" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" id="deleteId" />
+</form>
+
+@section Scripts {
+    <script>
+        function deleteItem(id, title) {
+            if (confirm('\"' + title + '\" favorilerinizden çıkarmak istediğinize emin misiniz?')) {
+                document.getElementById('deleteId').value = id;
+                document.getElementById('deleteForm').submit();
+            }
+        }
+    </script>
+}
+
+@functions {
+    string GetEntityTypeDisplay(string entityType)
+    {
+        switch (entityType)
+        {
+            case "News":
+                return "Haber";
+            case "KapNotification":
+                return "KAP Bildirimi";
+            case "BlogPost":
+                return "Blog Yazısı";
+            default:
+                return entityType;
+        }
+    }
+}

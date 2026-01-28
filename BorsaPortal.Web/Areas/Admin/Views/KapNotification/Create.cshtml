@@ -1,0 +1,88 @@
+@model BorsaPortal.Web.Areas.Admin.ViewModels.KapNotificationViewModel
+
+@{
+    ViewBag.Title = "Yeni KAP Bildirimi Ekle";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Yeni KAP Bildirimi Ekle</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-body">
+                @using (Html.BeginForm("Create", "KapNotification", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.CompanyId, new { @class = "form-label" })
+                            @Html.DropDownListFor(model => model.CompanyId, Model.Companies, "-- Şirket Seçiniz --", new { @class = "form-select" })
+                            @Html.ValidationMessageFor(model => model.CompanyId, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.NotificationType, new { @class = "form-label" })
+                            @Html.DropDownListFor(model => model.NotificationType, Model.NotificationTypes, new { @class = "form-select" })
+                            @Html.ValidationMessageFor(model => model.NotificationType, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.PublishDate, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.PublishDate, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local" })
+                            @Html.ValidationMessageFor(model => model.PublishDate, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.NotificationNumber, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.NotificationNumber, new { @class = "form-control", placeholder = "Örn: 2024-1234" })
+                            @Html.ValidationMessageFor(model => model.NotificationNumber, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Title, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.Title, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Summary, new { @class = "form-label" })
+                        @Html.TextAreaFor(model => model.Summary, new { @class = "form-control", rows = 3 })
+                        @Html.ValidationMessageFor(model => model.Summary, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Content, new { @class = "form-label" })
+                        @Html.TextAreaFor(model => model.Content, new { @class = "form-control", rows = 8 })
+                        @Html.ValidationMessageFor(model => model.Content, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.SourceUrl, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.SourceUrl, new { @class = "form-control", type = "url", placeholder = "https://www.kap.org.tr/..." })
+                        @Html.ValidationMessageFor(model => model.SourceUrl, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary me-md-2">İptal</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Kaydet
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

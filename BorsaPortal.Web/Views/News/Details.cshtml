@@ -1,0 +1,283 @@
+@model BorsaPortal.Domain.Entities.News
+@using BorsaPortal.Domain.Entities
+
+@{
+    ViewBag.Title = Model.Title + " - Borsa Portal";
+    var relatedNews = ViewBag.RelatedNews as List<News> ?? new List<News>();
+    var company = ViewBag.Company as Company;
+    var sector = ViewBag.Sector as Sector;
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Haber İçeriği -->
+        <article class="mb-4">
+            <!-- Başlık -->
+            <h1 class="mb-3">@Model.Title</h1>
+
+            <!-- Meta Bilgiler -->
+            <div class="d-flex flex-wrap gap-3 mb-4 text-muted">
+                <span>
+                    <i class="bi bi-calendar3"></i>
+                    @Model.PublishDate.ToString("dd MMMM yyyy, HH:mm")
+                </span>
+                <span>
+                    <i class="bi bi-eye"></i>
+                    @Model.ViewCount görüntülenme
+                </span>
+                @if (!string.IsNullOrEmpty(Model.Source))
+                {
+                    <span>
+                        <i class="bi bi-link-45deg"></i>
+                        @Model.Source
+                    </span>
+                }
+                @if (company != null)
+                {
+                    <span>
+                        <i class="bi bi-building"></i>
+                        @company.Name (@company.Code)
+                    </span>
+                }
+                @if (sector != null)
+                {
+                    <span>
+                        <i class="bi bi-diagram-3"></i>
+                        @sector.Name
+                    </span>
+                }
+            </div>
+
+            <!-- Etiketler -->
+            @if (Model.IsFeatured)
+            {
+                <div class="mb-3">
+                    <span class="badge bg-danger">ÖNE ÇIKAN</span>
+                </div>
+            }
+
+            <!-- Görsel -->
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <div class="mb-4">
+                    <img src="@Model.ImageUrl" alt="@Model.Title" class="img-fluid rounded shadow">
+                </div>
+            }
+
+            <!-- Özet -->
+            @if (!string.IsNullOrEmpty(Model.Summary))
+            {
+                <div class="lead mb-4 p-3 bg-light rounded">
+                    @Model.Summary
+                </div>
+            }
+
+            <!-- İçerik -->
+            <div class="news-content mb-4">
+                @Html.Raw(Model.Content?.Replace("\n", "<br/>"))
+            </div>
+
+            <!-- Kaynak Linki -->
+            @if (!string.IsNullOrEmpty(Model.SourceUrl))
+            {
+                <div class="mb-4">
+                    <a href="@Model.SourceUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
+                        <i class="bi bi-box-arrow-up-right"></i> Haber Kaynağını Görüntüle
+                    </a>
+                </div>
+            }
+
+            <!-- Paylaşım ve Favori Butonları -->
+            <div class="d-flex gap-2 mb-4 flex-wrap">
+                @if (Request.IsAuthenticated)
+                {
+                    <button type="button" class="btn btn-outline-warning btn-sm add-to-favorites" data-entity-type="News" data-entity-id="@Model.Id">
+                        <i class="bi bi-star"></i> Favorilere Ekle
+                    </button>
+                }
+                <a href="https://twitter.com/intent/tweet?text=@Uri.EscapeDataString(Model.Title)&url=@Uri.EscapeDataString(Request.Url.AbsoluteUri)"
+                   target="_blank"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-twitter"></i> Twitter'da Paylaş
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString(Request.Url.AbsoluteUri)"
+                   target="_blank"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-facebook"></i> Facebook'ta Paylaş
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url=@Uri.EscapeDataString(Request.Url.AbsoluteUri)"
+                   target="_blank"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-linkedin"></i> LinkedIn'de Paylaş
+                </a>
+            </div>
+
+            <!-- Geri Dön -->
+            <div class="mt-4">
+                <a href="@Url.Action("Index", "News")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Tüm Haberlere Dön
+                </a>
+            </div>
+        </article>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- İlgili Haberler -->
+        @if (relatedNews.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">İlgili Haberler</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    @foreach (var news in relatedNews)
+                    {
+                        <a href="@Url.Action("Details", new { id = news.Id })" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">@news.Title</h6>
+                            </div>
+                            <p class="mb-1 small text-muted">
+                                @if (!string.IsNullOrEmpty(news.Summary))
+                                {
+                                    @(news.Summary.Length > 80 ? news.Summary.Substring(0, 80) + "..." : news.Summary)
+                                }
+                            </p>
+                            <small class="text-muted">
+                                <i class="bi bi-clock"></i> @news.PublishDate.ToString("dd MMM yyyy")
+                            </small>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Şirket Bilgisi -->
+        @if (company != null)
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Şirket Bilgisi</h5>
+                </div>
+                <div class="card-body">
+                    <h6>@company.Name</h6>
+                    <p class="mb-1"><strong>Kod:</strong> @company.Code</p>
+                    @if (company.SectorId.HasValue && sector != null)
+                    {
+                        <p class="mb-0"><strong>Sektör:</strong> @sector.Name</p>
+                    }
+                    @if (!string.IsNullOrEmpty(company.Website))
+                    {
+                        <p class="mb-0">
+                            <a href="@company.Website" target="_blank" rel="noopener">
+                                <i class="bi bi-globe"></i> Web Sitesi
+                            </a>
+                        </p>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Sektör Bilgisi -->
+        @if (sector != null && company == null)
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Sektör</h5>
+                </div>
+                <div class="card-body">
+                    <h6>@sector.Name</h6>
+                    @if (!string.IsNullOrEmpty(sector.Description))
+                    {
+                        <p class="mb-0 small text-muted">@sector.Description</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .news-content {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #333;
+    }
+
+    .news-content p {
+        margin-bottom: 1rem;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Favori ekleme/çıkarma
+            $('.add-to-favorites').on('click', function () {
+                var btn = $(this);
+                var entityType = btn.data('entity-type');
+                var entityId = btn.data('entity-id');
+                var isFavorited = btn.hasClass('favorited');
+
+                var url = isFavorited ? '@Url.Action("Remove", "Favorites")' : '@Url.Action("Add", "Favorites")';
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        entityType: entityType,
+                        entityId: entityId
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            if (isFavorited) {
+                                btn.removeClass('favorited btn-warning').addClass('btn-outline-warning');
+                                btn.html('<i class="bi bi-star"></i> Favorilere Ekle');
+                            } else {
+                                btn.addClass('favorited btn-warning').removeClass('btn-outline-warning');
+                                btn.html('<i class="bi bi-star-fill"></i> Favorilerden Çıkar');
+                            }
+                            // Bildirim göster
+                            var alertType = isFavorited ? 'info' : 'success';
+                            var message = $('<div class="alert alert-' + alertType + ' alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 9999;" role="alert">' +
+                                '<i class="bi bi-check-circle"></i> ' + response.message +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                                '</div>');
+                            $('body').append(message);
+                            setTimeout(function () {
+                                message.alert('close');
+                            }, 3000);
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                    }
+                });
+            });
+
+            // Sayfa yüklendiğinde favori durumunu kontrol et
+            var btn = $('.add-to-favorites');
+            if (btn.length > 0) {
+                var entityType = btn.data('entity-type');
+                var entityId = btn.data('entity-id');
+
+                $.ajax({
+                    url: '@Url.Action("IsFavorite", "Favorites")',
+                    type: 'GET',
+                    data: {
+                        entityType: entityType,
+                        entityId: entityId
+                    },
+                    success: function (response) {
+                        if (response.isFavorite) {
+                            btn.addClass('favorited btn-warning').removeClass('btn-outline-warning');
+                            btn.html('<i class="bi bi-star-fill"></i> Favorilerden Çıkar');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

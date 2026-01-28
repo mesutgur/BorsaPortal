@@ -1,0 +1,440 @@
+@model BorsaPortal.Application.Services.PortfolioSummary
+
+@{
+    ViewBag.Title = "Portföyüm";
+    var companies = ViewBag.Companies as System.Collections.Generic.List<BorsaPortal.Web.Controllers.CompanyDropdownDto>;
+    var watchlistCompanyIds = ViewBag.WatchlistCompanyIds as System.Collections.Generic.List<int>;
+}
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-briefcase"></i> Portföy Yönetimi</h2>
+        <p class="text-muted">Hisselerinizi alın, satın ve takip edin</p>
+    </div>
+    <div>
+        <a href="@Url.Action("Analytics", "Portfolio")" class="btn btn-outline-primary me-2">
+            <i class="bi bi-graph-up"></i> Detaylı Analiz
+        </a>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#buyModal">
+            <i class="bi bi-plus-circle"></i> Hisse Al
+        </button>
+    </div>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        @TempData["WarningMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Portfolio Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Toplam Değer</h6>
+                <h3 class="mb-0">₺@Model.TotalValue.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Toplam Maliyet</h6>
+                <h3 class="mb-0">₺@Model.TotalCost.ToString("N2")</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Kar/Zarar</h6>
+                <h3 class="mb-0 @(Model.TotalProfitLoss >= 0 ? "text-success" : "text-danger")">
+                    ₺@Model.TotalProfitLoss.ToString("N2")
+                </h3>
+                <small class="@(Model.TotalProfitLoss >= 0 ? "text-success" : "text-danger")">
+                    @(Model.TotalProfitLoss >= 0 ? "+" : "")%@Model.TotalProfitLossPercentage.ToString("N2")
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Şirket Sayısı</h6>
+                <h3 class="mb-0">@Model.TotalCompanies</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Portfolio Items Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Portföy Detayı</h5>
+        @using (Html.BeginForm("UpdatePrices", "Portfolio", FormMethod.Post, new { @class = "d-inline" }))
+        {
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-arrow-repeat"></i> Fiyatları Güncelle
+            </button>
+        }
+    </div>
+    <div class="card-body">
+        @if (Model.AllItems != null && Model.AllItems.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Şirket</th>
+                            <th class="text-end">Adet</th>
+                            <th class="text-end">Ortalama Fiyat</th>
+                            <th class="text-end">Güncel Fiyat</th>
+                            <th class="text-end">Toplam Maliyet</th>
+                            <th class="text-end">Güncel Değer</th>
+                            <th class="text-end">Kar/Zarar</th>
+                            <th class="text-center">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.AllItems)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.Company.Code</strong><br />
+                                    <small class="text-muted">@item.Company.Name</small>
+                                </td>
+                                <td class="text-end">@item.Quantity.ToString("N2")</td>
+                                <td class="text-end">₺@item.AverageBuyPrice.ToString("N2")</td>
+                                <td class="text-end">₺@item.CurrentPrice.ToString("N2")</td>
+                                <td class="text-end">₺@item.TotalCost.ToString("N2")</td>
+                                <td class="text-end">₺@item.CurrentValue.ToString("N2")</td>
+                                <td class="text-end">
+                                    <span class="badge @(item.ProfitLoss >= 0 ? "bg-success" : "bg-danger")">
+                                        @(item.ProfitLoss >= 0 ? "+" : "")₺@item.ProfitLoss.ToString("N2")<br />
+                                        (@(item.ProfitLoss >= 0 ? "+" : "")%@item.ProfitLossPercentage.ToString("N2"))
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <button type="button" class="btn btn-outline-info" onclick="openUpdatePriceModal(@item.Id, '@item.Company.Code', @item.CurrentPrice)" title="Fiyat Güncelle">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-primary" onclick="openBuyModal(@item.CompanyId, '@item.Company.Code')" title="Daha Fazla Al">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning" onclick="openSellModal(@item.Id, @item.CompanyId, '@item.Company.Code', @item.Quantity)" title="Sat">
+                                            <i class="bi bi-dash"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger" onclick="deleteItem(@item.Id, '@item.Company.Code')" title="Sil">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-5">
+                <i class="bi bi-briefcase" style="font-size: 4rem; opacity: 0.2;"></i>
+                <h5 class="mt-3 text-muted">Portföyünüz Boş</h5>
+                <p class="text-muted">İlk hissenizi eklemek için "Hisse Al" butonuna tıklayın</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#buyModal">
+                    <i class="bi bi-plus-circle"></i> İlk Hisseyi Ekle
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Buy Modal -->
+<div class="modal fade" id="buyModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            @using (Html.BeginForm("Buy", "Portfolio", FormMethod.Post, new { id = "buyForm" }))
+            {
+                @Html.AntiForgeryToken()
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Hisse Al</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Quick Add from Watchlist -->
+                    @if (watchlistCompanyIds != null && watchlistCompanyIds.Any())
+                    {
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading"><i class="bi bi-star"></i> İzleme Listemden Hızlı Ekle</h6>
+                            <div class="btn-group btn-group-sm flex-wrap" role="group">
+                                @foreach (var companyId in watchlistCompanyIds.Take(5))
+                                {
+                                    var company = companies.FirstOrDefault(c => c.Id == companyId);
+                                    if (company != null)
+                                    {
+                                        <button type="button" class="btn btn-outline-primary mb-1" onclick="selectCompany(@company.Id, '@company.Code')">
+                                            @company.Code
+                                        </button>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <label class="form-label">Şirket <span class="text-danger">*</span></label>
+                        <select name="companyId" id="buyCompanyId" class="form-select" required>
+                            <option value="">Şirket ara veya seçiniz...</option>
+                            @if (companies != null)
+                            {
+                                var groupedCompanies = companies.GroupBy(c => c.SectorName);
+                                foreach (var group in groupedCompanies)
+                                {
+                                    <optgroup label="@group.Key">
+                                        @foreach (var company in group)
+                                        {
+                                            <option value="@company.Id">@company.Code - @company.Name</option>
+                                        }
+                                    </optgroup>
+                                }
+                            }
+                        </select>
+                        <small class="text-muted">
+                            <i class="bi bi-search"></i> Şirket kodunu veya ismini yazarak arayabilirsiniz
+                        </small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Adet <span class="text-danger">*</span></label>
+                            <input type="number" name="quantity" id="buyQuantity" class="form-control" step="1" min="1" required placeholder="100" oninput="calculateTotal()" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Alış Fiyatı (₺) <span class="text-danger">*</span></label>
+                            <input type="number" name="price" id="buyPrice" class="form-control" step="0.01" min="0.01" required placeholder="10.50" oninput="calculateTotal()" />
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle"></i> Tavsiye: Piyasa fiyatını kontrol edin
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Total Calculator -->
+                    <div class="alert alert-secondary">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h6 class="mb-0"><i class="bi bi-calculator"></i> Toplam Tutar</h6>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <h4 class="mb-0 text-success" id="totalAmount">₺0.00</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> İptal
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Satın Al
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Sell Modal -->
+<div class="modal fade" id="sellModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            @using (Html.BeginForm("Sell", "Portfolio", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="companyId" id="sellCompanyId" />
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title"><i class="bi bi-dash-circle"></i> Hisse Sat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong id="sellCompanyName"></strong> hissesini satıyorsunuz<br />
+                        <small>Mevcut Adet: <span id="sellMaxQuantity"></span></small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Satılacak Adet</label>
+                        <input type="number" name="quantity" id="sellQuantity" class="form-control" step="0.01" min="0.01" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Satış Fiyatı (₺)</label>
+                        <input type="number" name="price" class="form-control" step="0.01" min="0.01" required placeholder="12.75" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-warning">Sat</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Update Price Modal -->
+<div class="modal fade" id="updatePriceModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            @using (Html.BeginForm("UpdatePrice", "Portfolio", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="portfolioItemId" id="updatePriceItemId" />
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title"><i class="bi bi-arrow-repeat"></i> Fiyat Güncelle</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <strong id="updatePriceCompanyName"></strong> hissesinin güncel fiyatını güncelleyiniz<br />
+                        <small>Mevcut Fiyat: ₺<span id="updatePriceCurrentPrice"></span></small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yeni Fiyat (₺) <span class="text-danger">*</span></label>
+                        <input type="number" name="newPrice" id="updatePriceNewPrice" class="form-control" step="0.01" min="0.01" required placeholder="15.75" />
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i> Güncel piyasa fiyatını giriniz
+                        </small>
+                    </div>
+                    <div class="alert alert-secondary">
+                        <small class="text-muted">
+                            <i class="bi bi-lightbulb"></i> Bu işlem sadece güncel fiyatı günceller. Kar/zarar hesaplaması otomatik olarak yapılacaktır.
+                        </small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i> İptal
+                    </button>
+                    <button type="submit" class="btn btn-info text-white">
+                        <i class="bi bi-check-circle"></i> Güncelle
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation -->
+<form id="deleteForm" method="post" action="@Url.Action("Delete", "Portfolio")" style="display:none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="id" id="deleteId" />
+</form>
+
+@section Scripts {
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2 with search
+            $('#buyCompanyId').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Şirket ara veya seçiniz...',
+                allowClear: true,
+                width: '100%',
+                language: {
+                    noResults: function() {
+                        return "Sonuç bulunamadı";
+                    },
+                    searching: function() {
+                        return "Aranıyor...";
+                    }
+                }
+            });
+
+            // Reinitialize Select2 when modal is shown
+            $('#buyModal').on('shown.bs.modal', function() {
+                $('#buyCompanyId').select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Şirket ara veya seçiniz...',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#buyModal')
+                });
+            });
+
+            // Clear form when modal is hidden
+            $('#buyModal').on('hidden.bs.modal', function() {
+                $('#buyForm')[0].reset();
+                $('#buyCompanyId').val('').trigger('change');
+                $('#totalAmount').text('₺0.00');
+            });
+        });
+
+        function selectCompany(companyId, companyCode) {
+            $('#buyCompanyId').val(companyId).trigger('change');
+        }
+
+        function calculateTotal() {
+            var quantity = parseFloat($('#buyQuantity').val()) || 0;
+            var price = parseFloat($('#buyPrice').val()) || 0;
+            var total = quantity * price;
+            $('#totalAmount').text('₺' + total.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+        }
+
+        function openBuyModal(companyId, companyCode) {
+            if (companyId) {
+                $('#buyCompanyId').val(companyId).trigger('change');
+            }
+            var modal = new bootstrap.Modal(document.getElementById('buyModal'));
+            modal.show();
+        }
+
+        function openSellModal(itemId, companyId, companyCode, maxQuantity) {
+            document.getElementById('sellCompanyId').value = companyId;
+            document.getElementById('sellCompanyName').textContent = companyCode;
+            document.getElementById('sellMaxQuantity').textContent = maxQuantity;
+            document.getElementById('sellQuantity').max = maxQuantity;
+            var modal = new bootstrap.Modal(document.getElementById('sellModal'));
+            modal.show();
+        }
+
+        function openUpdatePriceModal(itemId, companyCode, currentPrice) {
+            document.getElementById('updatePriceItemId').value = itemId;
+            document.getElementById('updatePriceCompanyName').textContent = companyCode;
+            document.getElementById('updatePriceCurrentPrice').textContent = currentPrice.toFixed(2);
+            document.getElementById('updatePriceNewPrice').value = currentPrice.toFixed(2);
+            var modal = new bootstrap.Modal(document.getElementById('updatePriceModal'));
+            modal.show();
+        }
+
+        function deleteItem(id, companyCode) {
+            if (confirm(companyCode + ' hissesini portföyünüzden silmek istediğinize emin misiniz?')) {
+                document.getElementById('deleteId').value = id;
+                document.getElementById('deleteForm').submit();
+            }
+        }
+    </script>
+}

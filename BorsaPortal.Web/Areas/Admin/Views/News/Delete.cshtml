@@ -1,0 +1,93 @@
+@model BorsaPortal.Domain.Entities.News
+
+@{
+    ViewBag.Title = "Haber Sil";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Haber Sil</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="alert alert-warning" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <strong>Dikkat!</strong> Bu kaydı silmek istediğinizden emin misiniz?
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Başlık</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+
+            <dt class="col-sm-3">Özet</dt>
+            <dd class="col-sm-9">@Model.Summary</dd>
+
+            <dt class="col-sm-3">Yayın Tarihi</dt>
+            <dd class="col-sm-9">@Model.PublishDate.ToString("dd.MM.yyyy HH:mm")</dd>
+
+            @if (!string.IsNullOrEmpty(Model.Source))
+            {
+                <dt class="col-sm-3">Kaynak</dt>
+                <dd class="col-sm-9">@Model.Source</dd>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.SourceUrl))
+            {
+                <dt class="col-sm-3">Kaynak URL</dt>
+                <dd class="col-sm-9">
+                    <a href="@Model.SourceUrl" target="_blank" class="text-decoration-none">
+                        @Model.SourceUrl <i class="bi bi-box-arrow-up-right"></i>
+                    </a>
+                </dd>
+            }
+
+            @if (Model.Company != null)
+            {
+                <dt class="col-sm-3">Şirket</dt>
+                <dd class="col-sm-9">@Model.Company.Code - @Model.Company.Name</dd>
+            }
+
+            @if (Model.Sector != null)
+            {
+                <dt class="col-sm-3">Sektör</dt>
+                <dd class="col-sm-9">@Model.Sector.Name</dd>
+            }
+
+            <dt class="col-sm-3">Öne Çıkan</dt>
+            <dd class="col-sm-9">
+                @if (Model.IsFeatured)
+                {
+                    <span class="badge bg-success">
+                        <i class="bi bi-star-fill"></i> Evet
+                    </span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Hayır</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Görüntülenme</dt>
+            <dd class="col-sm-9">@Model.ViewCount</dd>
+
+            <dt class="col-sm-3">Oluşturulma</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+        </dl>
+
+        @using (Html.BeginForm("Delete", "News", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+            @Html.HiddenFor(model => model.Id)
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                <a href="@Url.Action("Index")" class="btn btn-secondary me-md-2">İptal</a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="bi bi-trash"></i> Sil
+                </button>
+            </div>
+        }
+    </div>
+</div>

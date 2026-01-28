@@ -1,0 +1,279 @@
+@model BorsaPortal.Web.Areas.Admin.ViewModels.BlogPostViewModel
+
+@{
+    ViewBag.Title = "Yeni Blog Yazısı";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-pencil-square"></i> Yeni Blog Yazısı</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Blog İçeriği</h5>
+            </div>
+            <div class="card-body p-4">
+                @using (Html.BeginForm("Create", "BlogPost", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-type"></i> Başlık
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(model => model.Title, new { @class = "form-control form-control-lg", placeholder = "Blog yazısı başlığını giriniz...", id = "blogTitle" })
+                            @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="autoSlugSwitch" checked>
+                                <label class="form-check-label fw-bold" for="autoSlugSwitch">
+                                    <i class="bi bi-magic"></i> Slug'ı otomatik oluştur
+                                </label>
+                            </div>
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-link-45deg"></i> Slug (URL)
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(model => model.Slug, new { @class = "form-control", placeholder = "ornek-blog-yazisi", id = "blogSlug", @readonly = "readonly" })
+                            @Html.ValidationMessageFor(model => model.Slug, "", new { @class = "text-danger small" })
+                            <small class="text-muted">URL'de görünecek kısım. Sadece küçük harf, rakam ve tire kullanın.</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-text-paragraph"></i> Özet
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextAreaFor(model => model.Summary, new { @class = "form-control", rows = 3, placeholder = "Blog yazısının kısa özetini giriniz..." })
+                            @Html.ValidationMessageFor(model => model.Summary, "", new { @class = "text-danger small" })
+                            <small class="text-muted">Blog önizlemesinde görüntülenecek kısa açıklama</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-file-richtext"></i> İçerik
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextAreaFor(model => model.Body, new { @class = "form-control tinymce-editor", rows = 15, id = "blogBody" })
+                            @Html.ValidationMessageFor(model => model.Body, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-image"></i> Kapak Görseli URL
+                            </label>
+                            @Html.TextBoxFor(model => model.FeaturedImageUrl, new { @class = "form-control", type = "url", placeholder = "https://...", id = "imageUrl" })
+                            @Html.ValidationMessageFor(model => model.FeaturedImageUrl, "", new { @class = "text-danger small" })
+                            <small class="text-muted">Blog yazısında görüntülenecek kapak resminin linki</small>
+                            <div id="imagePreview" class="mt-2" style="display:none;">
+                                <img id="previewImg" src="" alt="Önizleme" class="img-thumbnail" style="max-width: 300px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h6 class="mb-3 text-success"><i class="bi bi-gear"></i> Yayın Ayarları</h6>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-folder"></i> Kategori
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.DropDownListFor(model => model.CategoryId, Model.Categories, "-- Kategori Seçiniz --", new { @class = "form-select" })
+                            @Html.ValidationMessageFor(model => model.CategoryId, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-flag"></i> Durum
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.DropDownListFor(model => model.Status, Model.Statuses, new { @class = "form-select" })
+                            @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h6 class="mb-3 text-success"><i class="bi bi-search"></i> SEO Ayarları</h6>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-type-h1"></i> SEO Başlık
+                            </label>
+                            @Html.TextBoxFor(model => model.SeoTitle, new { @class = "form-control", placeholder = "Arama motorlarında görünecek başlık" })
+                            @Html.ValidationMessageFor(model => model.SeoTitle, "", new { @class = "text-danger small" })
+                            <small class="text-muted">Boş bırakılırsa blog başlığı kullanılır</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-text-left"></i> SEO Açıklama
+                            </label>
+                            @Html.TextAreaFor(model => model.SeoDescription, new { @class = "form-control", rows = 2, placeholder = "Arama motorlarında görünecek açıklama" })
+                            @Html.ValidationMessageFor(model => model.SeoDescription, "", new { @class = "text-danger small" })
+                            <small class="text-muted">Boş bırakılırsa blog özeti kullanılır (150-160 karakter önerilir)</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-tags"></i> SEO Anahtar Kelimeler
+                            </label>
+                            @Html.TextBoxFor(model => model.SeoKeywords, new { @class = "form-control", placeholder = "anahtar, kelime, virgül, ile, ayrılmış" })
+                            @Html.ValidationMessageFor(model => model.SeoKeywords, "", new { @class = "text-danger small" })
+                            <small class="text-muted">Virgülle ayrılmış anahtar kelimeler (örn: finans, borsa, ekonomi)</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg me-md-2">
+                            <i class="bi bi-x-circle"></i> İptal
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle"></i> Blog Yazısını Kaydet
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <!-- TinyMCE CDN -->
+    <script src="https://cdn.tiny.cloud/1/cesk3lpd0dm0gx9agadv4gi0405h934adv0bcz9du74iqm9k/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+    <style>
+        /* Form alanlarını tam genişlikte yap */
+        .form-control, .form-select {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Card body'yi daha geniş yap */
+        .card-body {
+            max-width: 100% !important;
+        }
+
+        /* TinyMCE container'ı tam genişlikte */
+        .tox-tinymce {
+            width: 100% !important;
+        }
+    </style>
+
+    <script>
+        $(document).ready(function () {
+            // TinyMCE Metin Editörü
+            tinymce.init({
+                selector: '.tinymce-editor',
+                height: 500,
+                width: '100%',
+                menubar: true,
+                plugins: [
+                    'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                    'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                    'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                ],
+                toolbar: 'undo redo | blocks fontsize | bold italic underline strikethrough | forecolor backcolor | ' +
+                    'alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | ' +
+                    'link image media table | removeformat code | help',
+                content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; }',
+                language: 'tr_TR',
+                branding: false,
+                promotion: false,
+                resize: true,
+                setup: function (editor) {
+                    editor.on('init', function () {
+                        console.log('TinyMCE editor initialized');
+                    });
+                }
+            });
+
+            // Slug Otomatik/Manuel Geçiş
+            $('#autoSlugSwitch').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#blogSlug').attr('readonly', 'readonly');
+                    generateSlug();
+                } else {
+                    $('#blogSlug').removeAttr('readonly');
+                }
+            });
+
+            // Başlık değiştiğinde slug oluştur
+            $('#blogTitle').on('input', function () {
+                if ($('#autoSlugSwitch').is(':checked')) {
+                    generateSlug();
+                }
+            });
+
+            // Slug oluşturma fonksiyonu
+            function generateSlug() {
+                var title = $('#blogTitle').val();
+                var slug = title
+                    .toLowerCase()
+                    .replace(/ğ/g, 'g')
+                    .replace(/ü/g, 'u')
+                    .replace(/ş/g, 's')
+                    .replace(/ı/g, 'i')
+                    .replace(/ö/g, 'o')
+                    .replace(/ç/g, 'c')
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .trim();
+                $('#blogSlug').val(slug);
+            }
+
+            // Image Preview
+            $('#imageUrl').on('input', function () {
+                var url = $(this).val();
+                if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                    $('#previewImg').attr('src', url);
+                    $('#imagePreview').show();
+
+                    // Check if image loads successfully
+                    $('#previewImg').on('error', function () {
+                        $('#imagePreview').hide();
+                    });
+                } else {
+                    $('#imagePreview').hide();
+                }
+            });
+
+            // Form submit - TinyMCE içeriğini textarea'ya aktar
+            $('form').on('submit', function () {
+                tinymce.triggerSave();
+            });
+        });
+    </script>
+}

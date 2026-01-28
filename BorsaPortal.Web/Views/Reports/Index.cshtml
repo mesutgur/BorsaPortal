@@ -1,0 +1,217 @@
+@using BorsaPortal.Application.Services
+@using BorsaPortal.Domain.Entities
+@{
+    ViewBag.Title = "Raporlar";
+    var portfolioSummary = ViewBag.PortfolioSummary as PortfolioSummary;
+    var transactions = ViewBag.Transactions as List<PortfolioItem>;
+    var watchlistAdditions = ViewBag.WatchlistAdditions as List<Watchlist>;
+    var startDate = ViewBag.StartDate as string;
+    var endDate = ViewBag.EndDate as string;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="bi bi-file-earmark-bar-graph"></i> Raporlar</h2>
+        <p class="text-muted">Portföy performansınızı ve işlem geçmişinizi inceleyin</p>
+    </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        @using (Html.BeginForm("Index", "Reports", FormMethod.Get, new { @class = "row g-3 align-items-end" }))
+        {
+            <div class="col-md-4">
+                <label class="form-label">Başlangıç Tarihi</label>
+                <input type="date" name="startDate" class="form-control" value="@startDate" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Bitiş Tarihi</label>
+                <input type="date" name="endDate" class="form-control" value="@endDate" />
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Filtrele
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Report Cards -->
+<div class="row mb-4 g-3">
+    <div class="col-6 col-lg-3">
+        <a href="@Url.Action("PortfolioPerformance", "Reports")" class="text-decoration-none">
+            <div class="card border-primary h-100 hover-shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-graph-up text-primary" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Portföy Performansı</h5>
+                    <p class="text-muted small mb-0">Detaylı performans analizi</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a href="@Url.Action("TransactionHistory", "Reports")" class="text-decoration-none">
+            <div class="card border-info h-100 hover-shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-clock-history text-info" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">İşlem Geçmişi</h5>
+                    <p class="text-muted small mb-0">Tüm alım satım işlemleri</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <a href="@Url.Action("Analytics", "Portfolio")" class="text-decoration-none">
+            <div class="card border-success h-100 hover-shadow">
+                <div class="card-body text-center">
+                    <i class="bi bi-pie-chart text-success" style="font-size: 3rem;"></i>
+                    <h5 class="mt-3">Analitik</h5>
+                    <p class="text-muted small mb-0">Grafikler ve analizler</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <i class="bi bi-download text-warning" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Dışa Aktar</h5>
+                <p class="text-muted small mb-0">
+                    <a href="#" class="btn btn-sm btn-outline-warning mt-2">
+                        <i class="bi bi-file-pdf"></i> PDF
+                    </a>
+                    <a href="#" class="btn btn-sm btn-outline-warning mt-2">
+                        <i class="bi bi-file-excel"></i> Excel
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Summary -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-briefcase"></i> Portföy Özeti</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center g-3">
+                    <div class="col-md-3">
+                        <h6 class="text-muted text-uppercase small">Toplam Değer</h6>
+                        <h4 class="mb-0">₺@(portfolioSummary?.TotalValue.ToString("N2") ?? "0,00")</h4>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted text-uppercase small">Toplam Maliyet</h6>
+                        <h4 class="mb-0">₺@(portfolioSummary?.TotalCost.ToString("N2") ?? "0,00")</h4>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted text-uppercase small">Kar/Zarar</h6>
+                        <h4 class="mb-0 @(portfolioSummary?.TotalProfitLoss >= 0 ? "text-success" : "text-danger")">
+                            @(portfolioSummary?.TotalProfitLoss >= 0 ? "+" : "")₺@(portfolioSummary?.TotalProfitLoss.ToString("N2") ?? "0,00")
+                        </h4>
+                    </div>
+                    <div class="col-md-3">
+                        <h6 class="text-muted text-uppercase small">Getiri Oranı</h6>
+                        <h4 class="mb-0 @(portfolioSummary?.TotalProfitLossPercentage >= 0 ? "text-success" : "text-danger")">
+                            @(portfolioSummary?.TotalProfitLossPercentage >= 0 ? "+" : "")@(portfolioSummary?.TotalProfitLossPercentage.ToString("N2") ?? "0,00")%
+                        </h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Dönem Bilgisi</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Başlangıç:</strong> @DateTime.Parse(startDate).ToString("dd MMMM yyyy")</p>
+                <p class="mb-2"><strong>Bitiş:</strong> @DateTime.Parse(endDate).ToString("dd MMMM yyyy")</p>
+                <p class="mb-0"><strong>Süre:</strong> @((DateTime.Parse(endDate) - DateTime.Parse(startDate)).Days) gün</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Transactions -->
+@if (transactions != null && transactions.Any())
+{
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Dönem İçi İşlemler (@transactions.Count)</h5>
+            <a href="@Url.Action("TransactionHistory", "Reports")" class="btn btn-sm btn-primary">
+                Tümünü Gör <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Şirket</th>
+                            <th>Sektör</th>
+                            <th class="text-end">Adet</th>
+                            <th class="text-end">Alış Fiyatı</th>
+                            <th class="text-end">Toplam Maliyet</th>
+                            <th class="text-end">Güncel Değer</th>
+                            <th class="text-end">Kar/Zarar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var transaction in transactions.Take(10))
+                        {
+                            <tr>
+                                <td>@transaction.BuyDate.ToString("dd.MM.yyyy")</td>
+                                <td>
+                                    <strong>@transaction.Company.Code</strong><br />
+                                    <small class="text-muted">@transaction.Company.Name</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@(transaction.Company.Sector?.Name ?? "N/A")</span>
+                                </td>
+                                <td class="text-end">@transaction.Quantity.ToString("N2")</td>
+                                <td class="text-end">₺@transaction.AverageBuyPrice.ToString("N2")</td>
+                                <td class="text-end">₺@transaction.TotalCost.ToString("N2")</td>
+                                <td class="text-end">₺@transaction.CurrentValue.ToString("N2")</td>
+                                <td class="text-end">
+                                    <span class="badge @(transaction.ProfitLoss >= 0 ? "bg-success" : "bg-danger")">
+                                        @(transaction.ProfitLoss >= 0 ? "+" : "")₺@transaction.ProfitLoss.ToString("N2")
+                                        (@(transaction.ProfitLoss >= 0 ? "+" : "")@transaction.ProfitLossPercentage.ToString("N2")%)
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; opacity: 0.2;"></i>
+            <h5 class="mt-3 text-muted">Seçili Dönemde İşlem Yok</h5>
+            <p class="text-muted">Bu tarih aralığında herhangi bir alım işlemi bulunmuyor</p>
+        </div>
+    </div>
+}
+
+@section Styles {
+    <style>
+        .hover-shadow {
+            transition: all 0.3s ease;
+        }
+        .hover-shadow:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+            transform: translateY(-2px);
+        }
+    </style>
+}

@@ -1,0 +1,319 @@
+@model BorsaPortal.Web.Areas.Admin.ViewModels.NewsViewModel
+
+@{
+    ViewBag.Title = "Haber Düzenle";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-pencil-square"></i> Haber Düzenle</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-pencil-square"></i> Haber Bilgileri</h5>
+            </div>
+            <div class="card-body p-4">
+                @using (Html.BeginForm("Edit", "News", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(model => model.Id)
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-type"></i> Başlık
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(model => model.Title, new { @class = "form-control form-control-lg", placeholder = "Haber başlığını giriniz..." })
+                            @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-text-paragraph"></i> Özet
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextAreaFor(model => model.Summary, new { @class = "form-control", rows = 3, placeholder = "Haberin kısa özetini giriniz..." })
+                            @Html.ValidationMessageFor(model => model.Summary, "", new { @class = "text-danger small" })
+                            <small class="text-muted">Haberin önizlemesinde görüntülenecek kısa açıklama</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-file-richtext"></i> İçerik
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextAreaFor(model => model.Content, new { @class = "form-control tinymce-editor", rows = 15 })
+                            @Html.ValidationMessageFor(model => model.Content, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h6 class="mb-3 text-primary"><i class="bi bi-info-circle"></i> Ek Bilgiler</h6>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-calendar-event"></i> Yayın Tarihi
+                                <span class="text-danger">*</span>
+                            </label>
+                            @Html.TextBoxFor(model => model.PublishDate, "{0:yyyy-MM-ddTHH:mm}", new { @class = "form-control", type = "datetime-local" })
+                            @Html.ValidationMessageFor(model => model.PublishDate, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-building"></i> Kaynak
+                            </label>
+                            @Html.TextBoxFor(model => model.Source, new { @class = "form-control", placeholder = "Örn: Bloomberg HT, Reuters" })
+                            @Html.ValidationMessageFor(model => model.Source, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-link-45deg"></i> Kaynak URL
+                            </label>
+                            <div class="input-group">
+                                @Html.TextBoxFor(model => model.SourceUrl, new { @class = "form-control", type = "url", placeholder = "https://...", id = "sourceUrl" })
+                                <button type="button" class="btn btn-info" id="fetchContentBtn" title="Kaynak URL'den içeriği otomatik çek">
+                                    <i class="bi bi-cloud-download"></i> İçeriği Çek
+                                </button>
+                            </div>
+                            @Html.ValidationMessageFor(model => model.SourceUrl, "", new { @class = "text-danger small" })
+                            <small class="text-muted">Haberin orijinal kaynağının linki. "İçeriği Çek" butonuna basarak kaynak sayfadan otomatik olarak haber detayını çekebilirsiniz.</small>
+                            <div id="fetchStatus" class="mt-2" style="display:none;">
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-hourglass-split"></i> <span id="fetchStatusText">İçerik çekiliyor...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-image"></i> Görsel URL
+                            </label>
+                            @Html.TextBoxFor(model => model.ImageUrl, new { @class = "form-control", type = "url", placeholder = "https://...", id = "imageUrl" })
+                            @Html.ValidationMessageFor(model => model.ImageUrl, "", new { @class = "text-danger small" })
+                            <small class="text-muted">Haberde görüntülenecek resmin linki</small>
+                            <div id="imagePreview" class="mt-2" style="display:none;">
+                                <img id="previewImg" src="" alt="Önizleme" class="img-thumbnail" style="max-width: 300px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h6 class="mb-3 text-primary"><i class="bi bi-tags"></i> Kategorizasyon</h6>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-building"></i> Şirket
+                            </label>
+                            @Html.DropDownListFor(model => model.CompanyId, Model.Companies, "-- Şirket Seçiniz (İsteğe Bağlı) --", new { @class = "form-select" })
+                            @Html.ValidationMessageFor(model => model.CompanyId, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-diagram-3"></i> Sektör
+                            </label>
+                            @Html.DropDownListFor(model => model.SectorId, Model.Sectors, "-- Sektör Seçiniz (İsteğe Bağlı) --", new { @class = "form-select" })
+                            @Html.ValidationMessageFor(model => model.SectorId, "", new { @class = "text-danger small" })
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-4">
+                            <div class="form-check form-switch">
+                                @Html.CheckBoxFor(model => model.IsFeatured, new { @class = "form-check-input", role = "switch" })
+                                <label class="form-check-label fw-bold" for="IsFeatured">
+                                    <i class="bi bi-star-fill text-warning"></i> Öne Çıkan Haber
+                                </label>
+                                <br>
+                                <small class="text-muted">Bu haber ana sayfada öne çıkarılsın mı?</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary btn-lg me-md-2">
+                            <i class="bi bi-x-circle"></i> İptal
+                        </a>
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-check-circle"></i> Değişiklikleri Kaydet
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+
+    <!-- TinyMCE CDN -->
+    <script src="https://cdn.tiny.cloud/1/cesk3lpd0dm0gx9agadv4gi0405h934adv0bcz9du74iqm9k/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+    <style>
+        /* Form alanlarını tam genişlikte yap */
+        .form-control, .form-select {
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Card body'yi daha geniş yap */
+        .card-body {
+            max-width: 100% !important;
+        }
+
+        /* TinyMCE container'ı tam genişlikte */
+        .tox-tinymce {
+            width: 100% !important;
+        }
+    </style>
+
+    <script>
+        // TinyMCE Editor Initialization
+        tinymce.init({
+            selector: '.tinymce-editor',
+            height: 500,
+            width: '100%',
+            menubar: true,
+            plugins: [
+                'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                'insertdatetime', 'media', 'table', 'code', 'help', 'wordcount'
+            ],
+            toolbar: 'undo redo | blocks | bold italic forecolor backcolor | ' +
+                'alignleft aligncenter alignright alignjustify | ' +
+                'bullist numlist outdent indent | removeformat | link image media | code | help',
+            content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; }',
+            language: 'tr_TR',
+            branding: false,
+            promotion: false,
+            resize: true,
+            setup: function (editor) {
+                editor.on('init', function () {
+                    console.log('TinyMCE editor initialized');
+                });
+            }
+        });
+
+        // Image Preview
+        $(document).ready(function () {
+            // Initial preview if image URL exists
+            var initialUrl = $('#imageUrl').val();
+            if (initialUrl && (initialUrl.startsWith('http://') || initialUrl.startsWith('https://'))) {
+                $('#previewImg').attr('src', initialUrl);
+                $('#imagePreview').show();
+            }
+
+            $('#imageUrl').on('input', function () {
+                var url = $(this).val();
+                if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+                    $('#previewImg').attr('src', url);
+                    $('#imagePreview').show();
+
+                    // Check if image loads successfully
+                    $('#previewImg').on('error', function () {
+                        $('#imagePreview').hide();
+                    });
+                } else {
+                    $('#imagePreview').hide();
+                }
+            });
+
+            // Kaynak URL'den içerik çekme
+            $('#fetchContentBtn').on('click', function () {
+                var sourceUrl = $('#sourceUrl').val();
+
+                if (!sourceUrl || (!sourceUrl.startsWith('http://') && !sourceUrl.startsWith('https://'))) {
+                    alert('Lütfen geçerli bir kaynak URL giriniz.');
+                    return;
+                }
+
+                // Kullanıcıya onay sor
+                if (!confirm('Mevcut içerik kaynak URL\'den çekilen içerikle değiştirilecek. Devam etmek istiyor musunuz?')) {
+                    return;
+                }
+
+                // Durum mesajını göster
+                $('#fetchStatus').show();
+                $('#fetchStatusText').text('İçerik çekiliyor...');
+                $('#fetchStatus .alert').removeClass('alert-danger alert-success').addClass('alert-info');
+                $('#fetchContentBtn').prop('disabled', true);
+
+                // AJAX ile içeriği çek
+                $.ajax({
+                    url: '@Url.Action("FetchContentFromUrl", "News")',
+                    type: 'POST',
+                    data: { url: sourceUrl },
+                    success: function (response) {
+                        if (response.success) {
+                            // Başarılı - formu doldur
+                            if (response.title) {
+                                $('#Title').val(response.title);
+                            }
+                            if (response.summary) {
+                                $('#Summary').val(response.summary);
+                            }
+                            if (response.content) {
+                                // TinyMCE'ye içeriği set et
+                                tinymce.get('Content').setContent(response.content);
+                            }
+                            if (response.imageUrl) {
+                                $('#imageUrl').val(response.imageUrl);
+                                $('#imageUrl').trigger('input'); // Preview'i tetikle
+                            }
+
+                            // Başarı mesajı
+                            $('#fetchStatusText').text('İçerik başarıyla çekildi!');
+                            $('#fetchStatus .alert').removeClass('alert-info').addClass('alert-success');
+                            setTimeout(function () {
+                                $('#fetchStatus').fadeOut();
+                            }, 3000);
+                        } else {
+                            // Hata mesajı
+                            $('#fetchStatusText').text(response.message || 'İçerik çekilemedi.');
+                            $('#fetchStatus .alert').removeClass('alert-info').addClass('alert-danger');
+                        }
+                    },
+                    error: function () {
+                        $('#fetchStatusText').text('Sunucu hatası oluştu. Lütfen tekrar deneyin.');
+                        $('#fetchStatus .alert').removeClass('alert-info').addClass('alert-danger');
+                    },
+                    complete: function () {
+                        $('#fetchContentBtn').prop('disabled', false);
+                    }
+                });
+            });
+
+            // Form submit - TinyMCE içeriğini textarea'ya aktar
+            $('form').on('submit', function () {
+                tinymce.triggerSave();
+            });
+        });
+    </script>
+}

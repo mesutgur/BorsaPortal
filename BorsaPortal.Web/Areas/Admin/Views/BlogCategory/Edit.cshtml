@@ -1,0 +1,62 @@
+@model BorsaPortal.Web.Areas.Admin.ViewModels.BlogCategoryViewModel
+
+@{
+    ViewBag.Title = "Kategori Düzenle";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Blog Kategorisi Düzenle</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                @using (Html.BeginForm("Edit", "BlogCategory", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(model => model.Id)
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Name, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.Name, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Slug, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.Slug, new { @class = "form-control", placeholder = "ornek-kategori" })
+                        @Html.ValidationMessageFor(model => model.Slug, "", new { @class = "text-danger" })
+                        <small class="form-text text-muted">Sadece küçük harf, rakam ve tire kullanın</small>
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.DisplayOrder, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.DisplayOrder, new { @class = "form-control", type = "number", min = "0" })
+                        @Html.ValidationMessageFor(model => model.DisplayOrder, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Description, new { @class = "form-label" })
+                        @Html.TextAreaFor(model => model.Description, new { @class = "form-control", rows = 4 })
+                        @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary me-md-2">İptal</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Güncelle
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

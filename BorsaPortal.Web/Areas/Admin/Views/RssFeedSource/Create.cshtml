@@ -1,0 +1,147 @@
+@model BorsaPortal.Web.Areas.Admin.ViewModels.RssFeedSourceViewModel
+
+@{
+    ViewBag.Title = "Yeni RSS Feed Kaynağı";
+}
+
+<h2><i class="bi bi-rss-fill"></i> Yeni RSS Feed Kaynağı</h2>
+
+<hr />
+
+<div class="row">
+    <div class="col-md-8">
+        @using (Html.BeginForm("Create", "RssFeedSource", FormMethod.Post, new { @class = "needs-validation" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Temel Bilgiler</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Name, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.Name, new { @class = "form-control", placeholder = "Örn: Bloomberg Borsa Haberleri" })
+                        @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Description, new { @class = "form-label" })
+                        @Html.TextAreaFor(model => model.Description, new { @class = "form-control", rows = 2, placeholder = "Bu RSS kaynağı hakkında kısa açıklama" })
+                        @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.FeedUrl, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.FeedUrl, new { @class = "form-control", placeholder = "https://example.com/rss", type = "url" })
+                        @Html.ValidationMessageFor(model => model.FeedUrl, "", new { @class = "text-danger" })
+                        <small class="form-text text-muted">RSS veya Atom feed URL'si giriniz</small>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.SectorId, new { @class = "form-label" })
+                            @Html.DropDownList("SectorId", (SelectList)ViewBag.Sectors, "-- Sektör Seçiniz (Opsiyonel) --", new { @class = "form-select" })
+                            @Html.ValidationMessageFor(model => model.SectorId, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">Bu kaynaktan gelen haberler belirtilen sektöre atanır</small>
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            @Html.LabelFor(model => model.FetchIntervalMinutes, new { @class = "form-label" })
+                            @Html.TextBoxFor(model => model.FetchIntervalMinutes, new { @class = "form-control", type = "number", min = 15, max = 1440 })
+                            @Html.ValidationMessageFor(model => model.FetchIntervalMinutes, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">15-1440 dakika arası (1 gün = 1440 dk)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Filtreleme Ayarları</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.IncludeKeywords, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.IncludeKeywords, new { @class = "form-control", placeholder = "borsa, hisse, şirket" })
+                        @Html.ValidationMessageFor(model => model.IncludeKeywords, "", new { @class = "text-danger" })
+                        <small class="form-text text-muted">Virgülle ayrılmış anahtar kelimeler. Sadece bu kelimeleri içeren haberler çekilir.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.ExcludeKeywords, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.ExcludeKeywords, new { @class = "form-control", placeholder = "spor, magazin, politika" })
+                        @Html.ValidationMessageFor(model => model.ExcludeKeywords, "", new { @class = "text-danger" })
+                        <small class="form-text text-muted">Virgülle ayrılmış anahtar kelimeler. Bu kelimeleri içeren haberler çekilmez.</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Durum Ayarları</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-2">
+                        @Html.CheckBoxFor(model => model.IsActive, new { @class = "form-check-input" })
+                        @Html.LabelFor(model => model.IsActive, new { @class = "form-check-label" })
+                        <small class="form-text text-muted d-block">Aktif kaynaklar otomatik olarak kontrol edilir</small>
+                    </div>
+
+                    <div class="form-check">
+                        @Html.CheckBoxFor(model => model.AutoPublish, new { @class = "form-check-input" })
+                        @Html.LabelFor(model => model.AutoPublish, new { @class = "form-check-label" })
+                        <small class="form-text text-muted d-block">Aktif edilirse çekilen haberler otomatik olarak yayınlanır</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> Kaydet
+                </button>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> İptal
+                </a>
+            </div>
+        }
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Yardım</h5>
+            </div>
+            <div class="card-body">
+                <h6>RSS Feed URL Bulma</h6>
+                <p class="small">Haber sitelerinin genellikle "/rss", "/feed" veya "/atom" gibi URL'leri vardır.</p>
+
+                <h6>Popüler Kaynaklar</h6>
+                <ul class="small">
+                    <li>Bloomberg HT</li>
+                    <li>Dünya Gazetesi</li>
+                    <li>Para Analiz</li>
+                    <li>Investing.com</li>
+                </ul>
+
+                <h6>Filtreleme İpuçları</h6>
+                <p class="small">
+                    Anahtar kelime filtreleri hem başlık hem de içerik üzerinde çalışır.
+                    Büyük/küçük harf duyarlı değildir.
+                </p>
+
+                <h6>Çekilme Aralığı</h6>
+                <p class="small">
+                    Önerilen aralıklar:<br />
+                    - Hızlı kaynaklar: 15-30 dk<br />
+                    - Normal kaynaklar: 60 dk<br />
+                    - Yavaş kaynaklar: 120-360 dk
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

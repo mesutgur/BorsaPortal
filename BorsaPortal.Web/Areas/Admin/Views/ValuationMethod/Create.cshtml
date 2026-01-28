@@ -1,0 +1,138 @@
+@model BorsaPortal.Web.Areas.Admin.ViewModels.ValuationMethodViewModel
+@{
+    ViewBag.Title = "Yeni Değerleme Yöntemi";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-plus-circle"></i> Yeni Değerleme Yöntemi</h2>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Geri
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Yöntem Bilgileri</h5>
+                </div>
+                <div class="card-body">
+                    @using (Html.BeginForm("Create", "ValuationMethod", FormMethod.Post, new { @class = "needs-validation", novalidate = "novalidate" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                        <div class="mb-3">
+                            <label class="form-label">@Html.DisplayNameFor(m => m.Name) <span class="text-danger">*</span></label>
+                            @Html.TextBoxFor(m => m.Name, new { @class = "form-control", required = "required", placeholder = "Örn: 1. Çeyrek Değerleme" })
+                            @Html.ValidationMessageFor(m => m.Name, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">Değerleme yönteminin görünen adı</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@Html.DisplayNameFor(m => m.Description)</label>
+                            @Html.TextAreaFor(m => m.Description, 3, 0, new { @class = "form-control", placeholder = "Değerleme yönteminin açıklaması..." })
+                            @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">Kullanıcılara gösterilecek açıklama</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@Html.DisplayNameFor(m => m.MethodType) <span class="text-danger">*</span></label>
+                            @Html.DropDownListFor(m => m.MethodType, new SelectList(new[]
+                            {
+                                new { Value = "Basic", Text = "Basic - Temel F/K Analizi" },
+                                new { Value = "Quarter1", Text = "Quarter1 - 1. Çeyrek" },
+                                new { Value = "Quarter2", Text = "Quarter2 - 2. Çeyrek (6 Aylık)" },
+                                new { Value = "Quarter3", Text = "Quarter3 - 3. Çeyrek (9 Aylık)" },
+                                new { Value = "Quarter4", Text = "Quarter4 - 4. Çeyrek (Yıllık)" },
+                                new { Value = "YearEnd", Text = "YearEnd - Yıl Sonu Tahmini" },
+                                new { Value = "LongTerm", Text = "LongTerm - Uzun Vadeli Hedef" }
+                            }, "Value", "Text"), "-- Yöntem Tipi Seçin --", new { @class = "form-select", required = "required" })
+                            @Html.ValidationMessageFor(m => m.MethodType, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">Hesaplama algoritmasını belirler</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">@Html.DisplayNameFor(m => m.Formula)</label>
+                            @Html.TextAreaFor(m => m.Formula, 4, 0, new { @class = "form-control font-monospace", placeholder = "Örn: Hedef Fiyat = (Tahmini Yıllık Kar / Ödenmiş Sermaye) × F/K Oranı × Güncel Fiyat" })
+                            @Html.ValidationMessageFor(m => m.Formula, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">Formül açıklaması (kullanıcılara gösterilir)</small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.DisplayOrder) <span class="text-danger">*</span></label>
+                                @Html.TextBoxFor(m => m.DisplayOrder, new { @class = "form-control", type = "number", required = "required", min = "0", value = "0" })
+                                @Html.ValidationMessageFor(m => m.DisplayOrder, "", new { @class = "text-danger" })
+                                <small class="form-text text-muted">Liste sırası (küçükten büyüğe)</small>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4 pt-2">
+                                    @Html.CheckBoxFor(m => m.IsActive, new { @class = "form-check-input", @checked = "checked" })
+                                    <label class="form-check-label" for="IsActive">
+                                        @Html.DisplayNameFor(m => m.IsActive)
+                                    </label>
+                                    <small class="form-text text-muted d-block">Aktif yöntemler kullanıcılara gösterilir</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr />
+
+                        <div class="d-flex justify-content-between">
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> İptal
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-save"></i> Kaydet
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card bg-light">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Yardım</h5>
+                </div>
+                <div class="card-body">
+                    <h6>Yöntem Tipleri:</h6>
+                    <ul class="small">
+                        <li><strong>Basic:</strong> Temel F/K oranı analizi</li>
+                        <li><strong>Quarter1-4:</strong> Çeyreklik verilerle analiz</li>
+                        <li><strong>YearEnd:</strong> Yıl sonu tahmini</li>
+                        <li><strong>LongTerm:</strong> Uzun vadeli (2019-2022 verileriyle)</li>
+                    </ul>
+
+                    <hr />
+
+                    <h6>Gerekli Alanlar:</h6>
+                    <ul class="small">
+                        <li>Yöntem Adı</li>
+                        <li>Yöntem Tipi</li>
+                        <li>Sıra</li>
+                    </ul>
+
+                    <hr />
+
+                    <h6>İpuçları:</h6>
+                    <ul class="small">
+                        <li>Açıklama alanında yöntemin ne zaman kullanılacağını belirtin</li>
+                        <li>Formül alanında matematiksel ifadeyi açıklayın</li>
+                        <li>Sıra numarası listede görünme sırasını belirler</li>
+                        <li>Pasif yöntemler kullanıcılara gösterilmez</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    @Scripts.Render("~/bundles/jqueryval")
+}

@@ -1,0 +1,54 @@
+@model BorsaPortal.Domain.Entities.Sector
+
+@{
+    ViewBag.Title = "Sektör Sil";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Sektör Sil</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">Silme Onayı</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Uyarı!</strong> Bu sektörü silmek istediğinizden emin misiniz?
+                </div>
+
+                <dl class="row">
+                    <dt class="col-sm-3">ID</dt>
+                    <dd class="col-sm-9">@Model.Id</dd>
+
+                    <dt class="col-sm-3">Kod</dt>
+                    <dd class="col-sm-9">@Model.Code</dd>
+
+                    <dt class="col-sm-3">Sektör Adı</dt>
+                    <dd class="col-sm-9">@Model.Name</dd>
+
+                    <dt class="col-sm-3">Açıklama</dt>
+                    <dd class="col-sm-9">@Model.Description</dd>
+                </dl>
+
+                @using (Html.BeginForm("Delete", "Sector", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary me-md-2">İptal</a>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-trash"></i> Sil
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

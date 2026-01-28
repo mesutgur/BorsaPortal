@@ -1,0 +1,248 @@
+@model List<BorsaPortal.Domain.Entities.KapNotification>
+@using BorsaPortal.Domain.Entities
+@using BorsaPortal.Domain.Enums
+@using System.Web.Mvc
+
+@{
+    ViewBag.Title = "KAP Bildirimleri - Borsa Portal";
+    var companies = ViewBag.Companies as List<Company> ?? new List<Company>();
+    var notificationTypes = ViewBag.NotificationTypes as List<SelectListItem> ?? new List<SelectListItem>();
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
+    var totalCount = (int)ViewBag.TotalCount;
+    var companyId = ViewBag.CompanyId as int?;
+    var notificationType = ViewBag.NotificationType as KapNotificationType?;
+}
+
+<div class="mb-4">
+    <h1 class="h2">KAP Bildirimleri</h1>
+    <p class="text-muted">Kamuyu Aydınlatma Platformu (KAP) bildirimleri</p>
+</div>
+
+<!-- Filtreler -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="@Url.Action("Index")" class="row g-3">
+            <div class="col-md-5">
+                <label for="companyFilter" class="form-label">Şirket</label>
+                <select name="companyId" id="companyFilter" class="form-select">
+                    <option value="">Tüm Şirketler</option>
+                    @foreach (var company in companies)
+                    {
+                        <option value="@company.Id" @(companyId == company.Id ? "selected" : "")>@company.Name (@company.Code)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="typeFilter" class="form-label">Bildirim Türü</label>
+                <select name="notificationType" id="typeFilter" class="form-select">
+                    <option value="">Tüm Türler</option>
+                    @foreach (var type in notificationTypes)
+                    {
+                        <option value="@type.Value" @(notificationType.HasValue && type.Value == ((int)notificationType.Value).ToString() ? "selected" : "")>@type.Text</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filtrele</button>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary">Temizle</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (ViewBag.SelectedCompany != null || ViewBag.SelectedNotificationType != null)
+{
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-filter"></i>
+        Filtreleniyor:
+        @if (ViewBag.SelectedCompany != null)
+        {
+            <span class="badge bg-primary">Şirket: @ViewBag.SelectedCompany (@ViewBag.SelectedCompanyCode)</span>
+        }
+        @if (ViewBag.SelectedNotificationType != null)
+        {
+            <span class="badge bg-primary">Tür: @ViewBag.SelectedNotificationType</span>
+        }
+        <span class="text-muted">(@totalCount sonuç)</span>
+    </div>
+}
+
+<!-- Bildirimler Listesi -->
+@if (Model.Any())
+{
+    <div class="card mb-4">
+        <div class="list-group list-group-flush">
+            @foreach (var notification in Model)
+            {
+                <div class="list-group-item">
+                    <div class="row">
+                        <div class="col-md-9">
+                            <div class="d-flex w-100 justify-content-between mb-2">
+                                <h5 class="mb-1">@notification.Title</h5>
+                                <small class="text-muted">@notification.PublishDate.ToString("dd.MM.yyyy HH:mm")</small>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(notification.Summary))
+                            {
+                                <p class="mb-2">@notification.Summary</p>
+                            }
+
+                            <div class="d-flex gap-2 flex-wrap">
+                                @if (notification.Company != null)
+                                {
+                                    <span class="badge bg-primary">
+                                        <i class="bi bi-building"></i> @notification.Company.Name (@notification.Company.Code)
+                                    </span>
+                                }
+
+                                <span class="badge bg-secondary">
+                                    <i class="bi bi-tag"></i> @GetNotificationTypeDisplayName(notification.NotificationType)
+                                </span>
+
+                                @if (!string.IsNullOrEmpty(notification.NotificationNumber))
+                                {
+                                    <span class="badge bg-info text-dark">
+                                        <i class="bi bi-hash"></i> @notification.NotificationNumber
+                                    </span>
+                                }
+
+                                @if (notification.IsAutoFetched)
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-download"></i> Otomatik
+                                    </span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 d-flex align-items-center justify-content-end">
+                            @if (!string.IsNullOrEmpty(notification.SourceUrl))
+                            {
+                                <a href="@notification.SourceUrl" target="_blank" class="btn btn-outline-success btn-sm">
+                                    <i class="bi bi-box-arrow-up-right"></i> KAP'ta Göster
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(notification.Content))
+                    {
+                        <div class="mt-3">
+                            <button class="btn btn-sm btn-link text-decoration-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#content-@notification.Id">
+                                <i class="bi bi-chevron-down"></i> Detayları Göster
+                            </button>
+                            <div class="collapse mt-2" id="content-@notification.Id">
+                                <div class="card card-body bg-light">
+                                    @Html.Raw(notification.Content.Replace("\n", "<br/>"))
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Sayfalama -->
+    if (totalPages > 1)
+    {
+        <nav aria-label="Sayfa navigasyonu">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage - 1, companyId = companyId, notificationType = notificationType })">Önceki</a>
+                </li>
+
+                @{
+                    int startPage = Math.Max(1, currentPage - 5);
+                    int endPage = Math.Min(totalPages, currentPage + 5);
+                }
+
+                @if (startPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Index", new { page = 1, companyId = companyId, notificationType = notificationType })">1</a>
+                    </li>
+                    if (startPage > 2)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+                }
+
+                @for (int i = startPage; i <= endPage; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { page = i, companyId = companyId, notificationType = notificationType })">@i</a>
+                    </li>
+                }
+
+                if (endPage < totalPages)
+                {
+                    @if (endPage < totalPages - 1)
+                    {
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    }
+                    <li class="page-item">
+                        <a class="page-link" href="@Url.Action("Index", new { page = totalPages, companyId = companyId, notificationType = notificationType })">@totalPages</a>
+                    </li>
+                }
+
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage + 1, companyId = companyId, notificationType = notificationType })">Sonraki</a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="text-center text-muted mb-4">
+            Toplam @totalCount bildirim (Sayfa @currentPage / @totalPages)
+        </div>
+    }
+}
+else
+{
+    <div class="alert alert-warning text-center">
+        <i class="bi bi-info-circle me-2"></i>
+        Henüz KAP bildirimi bulunmamaktadır.
+    </div>
+}
+
+<style>
+    .list-group-item {
+        transition: background-color 0.2s;
+    }
+
+        .list-group-item:hover {
+            background-color: #f8f9fa;
+        }
+</style>
+
+@functions {
+    string GetNotificationTypeDisplayName(KapNotificationType type)
+    {
+        switch (type)
+        {
+            case KapNotificationType.FinancialStatement:
+                return "Mali Tablo";
+            case KapNotificationType.GeneralAssembly:
+                return "Genel Kurul";
+            case KapNotificationType.OwnershipStructure:
+                return "Ortaklık Yapısı";
+            case KapNotificationType.MaterialDisclosure:
+                return "Özel Durum Açıklaması";
+            case KapNotificationType.Dividend:
+                return "Kar Payı";
+            case KapNotificationType.BoardDecision:
+                return "Yönetim Kurulu Kararı";
+            case KapNotificationType.CapitalIncrease:
+                return "Sermaye Artırımı";
+            case KapNotificationType.MergerAcquisition:
+                return "Birleşme/Devralma";
+            case KapNotificationType.Related:
+                return "İlişkili Taraf İşlemleri";
+            case KapNotificationType.Other:
+                return "Diğer";
+            default:
+                return type.ToString();
+        }
+    }
+}

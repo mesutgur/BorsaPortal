@@ -1,0 +1,324 @@
+@model BorsaPortal.Application.Services.PortfolioSummary
+
+@{
+    ViewBag.Title = "Portföy Analizi";
+}
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-graph-up"></i> Portföy Analizi</h2>
+        <p class="text-muted">Detaylı performans metrikleri ve grafikler</p>
+    </div>
+    <div>
+        <a href="@Url.Action("Index", "Portfolio")" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Portföy'e Dön
+        </a>
+    </div>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Toplam Değer</h6>
+                <h3 class="mb-0 text-primary">₺@Model.TotalValue.ToString("N2")</h3>
+                <small class="text-muted">Güncel Portföy Değeri</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Yatırım</h6>
+                <h3 class="mb-0 text-info">₺@Model.TotalInvestedAmount.ToString("N2")</h3>
+                <small class="text-muted">Toplam Yatırılan</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-@(Model.UnrealizedProfitLoss >= 0 ? "success" : "danger")">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Kar/Zarar</h6>
+                <h3 class="mb-0 text-@(Model.UnrealizedProfitLoss >= 0 ? "success" : "danger")">
+                    ₺@Model.UnrealizedProfitLoss.ToString("N2")
+                </h3>
+                <small class="text-@(Model.UnrealizedProfitLoss >= 0 ? "success" : "danger")">
+                    @(Model.UnrealizedProfitLoss >= 0 ? "+" : "")%@Model.TotalProfitLossPercentage.ToString("N2")
+                </small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-secondary">
+            <div class="card-body">
+                <h6 class="text-muted text-uppercase">Pozisyonlar</h6>
+                <h3 class="mb-0 text-secondary">@Model.TotalPositions</h3>
+                <small class="text-success">@Model.ProfitablePositions Kar</small> /
+                <small class="text-danger">@Model.LossPositions Zarar</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Advanced Metrics -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-trophy"></i> Performans Metrikleri</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">En İyi Performans</h6>
+                            <h3 class="text-success mb-0">+%@Model.BestPerformer.ToString("N2")</h3>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">En Kötü Performans</h6>
+                            <h3 class="text-danger mb-0">%@Model.WorstPerformer.ToString("N2")</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">Başarı Oranı</h6>
+                            <h3 class="mb-0">
+                                %@(Model.TotalPositions > 0 ? ((decimal)Model.ProfitablePositions / Model.TotalPositions * 100).ToString("N1") : "0")
+                            </h3>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-3 bg-light rounded">
+                            <h6 class="text-muted mb-2">Toplam Getiri</h6>
+                            <h3 class="text-@(Model.TotalProfitLossPercentage >= 0 ? "success" : "danger") mb-0">
+                                @(Model.TotalProfitLossPercentage >= 0 ? "+" : "")%@Model.TotalProfitLossPercentage.ToString("N2")
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Sektör Dağılımı</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="sectorChart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Top Gainers and Losers -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-arrow-up-circle"></i> En Çok Kazananlar</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopGainers != null && Model.TopGainers.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Hisse</th>
+                                    <th class="text-end">Kar</th>
+                                    <th class="text-end">Getiri %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.TopGainers)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.Company.Code</strong><br />
+                                            <small class="text-muted">@item.Company.Name</small>
+                                        </td>
+                                        <td class="text-end text-success">
+                                            <strong>₺@item.ProfitLoss.ToString("N2")</strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-success">+%@item.ProfitLossPercentage.ToString("N2")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Henüz kar eden pozisyon yok.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="bi bi-arrow-down-circle"></i> En Çok Kaybedenler</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopLosers != null && Model.TopLosers.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Hisse</th>
+                                    <th class="text-end">Zarar</th>
+                                    <th class="text-end">Kayıp %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.TopLosers)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.Company.Code</strong><br />
+                                            <small class="text-muted">@item.Company.Name</small>
+                                        </td>
+                                        <td class="text-end text-danger">
+                                            <strong>₺@item.ProfitLoss.ToString("N2")</strong>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-danger">%@item.ProfitLossPercentage.ToString("N2")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center">Henüz zarar eden pozisyon yok.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sector Performance Chart -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Sektör Bazlı Kar/Zarar</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="sectorProfitLossChart" style="max-height: 300px;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Sektör Dağılımı Pasta Grafiği
+        var sectorData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.SectorAllocation ?? new Dictionary<string, decimal>()));
+        var sectorLabels = Object.keys(sectorData);
+        var sectorValues = Object.values(sectorData);
+
+        var sectorCtx = document.getElementById('sectorChart').getContext('2d');
+        var sectorChart = new Chart(sectorCtx, {
+            type: 'pie',
+            data: {
+                labels: sectorLabels,
+                datasets: [{
+                    data: sectorValues,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.8)',
+                        'rgba(54, 162, 235, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(153, 102, 255, 0.8)',
+                        'rgba(255, 159, 64, 0.8)',
+                        'rgba(199, 199, 199, 0.8)',
+                        'rgba(83, 102, 255, 0.8)',
+                        'rgba(255, 99, 255, 0.8)',
+                        'rgba(99, 255, 132, 0.8)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#fff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': %' + context.parsed.toFixed(2);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Sektör Kar/Zarar Bar Grafiği
+        var sectorProfitLossData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(Model.SectorProfitLoss ?? new Dictionary<string, decimal>()));
+        var sectorPLLabels = Object.keys(sectorProfitLossData);
+        var sectorPLValues = Object.values(sectorProfitLossData);
+
+        var sectorPLCtx = document.getElementById('sectorProfitLossChart').getContext('2d');
+        var sectorPLChart = new Chart(sectorPLCtx, {
+            type: 'bar',
+            data: {
+                labels: sectorPLLabels,
+                datasets: [{
+                    label: 'Kar/Zarar (₺)',
+                    data: sectorPLValues,
+                    backgroundColor: sectorPLValues.map(v => v >= 0 ? 'rgba(75, 192, 192, 0.8)' : 'rgba(255, 99, 132, 0.8)'),
+                    borderColor: sectorPLValues.map(v => v >= 0 ? 'rgba(75, 192, 192, 1)' : 'rgba(255, 99, 132, 1)'),
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₺' + value.toLocaleString('tr-TR');
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '₺' + context.parsed.y.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+}

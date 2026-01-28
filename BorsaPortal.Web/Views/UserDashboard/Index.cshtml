@@ -1,0 +1,437 @@
+@using BorsaPortal.Application.Services
+@using BorsaPortal.Domain.Entities
+@{
+    ViewBag.Title = "Hesabım";
+    var portfolioSummary = ViewBag.PortfolioSummary as PortfolioSummary;
+    var watchlist = ViewBag.Watchlist as List<Watchlist>;
+    var stockPrices = ViewBag.StockPrices as System.Collections.Generic.Dictionary<string, BorsaPortal.Application.Services.StockPriceData>;
+    var latestKapNotifications = ViewBag.LatestKapNotifications as List<KapNotification>;
+    var latestNews = ViewBag.LatestNews as List<News>;
+    var favorites = ViewBag.Favorites as List<UserFavorite>;
+    var preferences = ViewBag.Preferences as UserPreference;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h2><i class="bi bi-person-circle"></i> Hesabım</h2>
+        <p class="text-muted">Portföyünüz, izleme listesi ve favorileriniz</p>
+    </div>
+</div>
+
+<!-- Portfolio Summary Cards -->
+<div class="row mb-4 g-3">
+    <div class="col-6 col-lg-3">
+        <div class="card text-white bg-primary h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="card-title text-uppercase mb-0">Portföy Değeri</h6>
+                    <i class="bi bi-briefcase fs-4 opacity-50"></i>
+                </div>
+                <h3 class="mb-1">₺@(portfolioSummary?.TotalValue.ToString("N2") ?? "0,00")</h3>
+                <small class="opacity-75">
+                    <i class="bi bi-building"></i> @(portfolioSummary?.TotalCompanies ?? 0) şirket
+                </small>
+                @if (portfolioSummary?.TotalShares > 0)
+                {
+                    <br />
+                    <small class="opacity-75">
+                        <i class="bi bi-boxes"></i> @portfolioSummary.TotalShares.ToString("N0") adet
+                    </small>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card text-white bg-info h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="card-title text-uppercase mb-0">Toplam Maliyet</h6>
+                    <i class="bi bi-cash-coin fs-4 opacity-50"></i>
+                </div>
+                <h3 class="mb-1">₺@(portfolioSummary?.TotalCost.ToString("N2") ?? "0,00")</h3>
+                @if (portfolioSummary?.AverageCostPerShare > 0)
+                {
+                    <small class="opacity-75">
+                        <i class="bi bi-calculator"></i> Ort: ₺@portfolioSummary.AverageCostPerShare.ToString("N2")
+                    </small>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card text-white @(portfolioSummary?.TotalProfitLoss >= 0 ? "bg-success" : "bg-danger") h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="card-title text-uppercase mb-0">Kar/Zarar</h6>
+                    <i class="bi @(portfolioSummary?.TotalProfitLoss >= 0 ? "bi-graph-up-arrow" : "bi-graph-down-arrow") fs-4 opacity-50"></i>
+                </div>
+                <h3 class="mb-1">
+                    @(portfolioSummary?.TotalProfitLoss >= 0 ? "+" : "")₺@(portfolioSummary?.TotalProfitLoss.ToString("N2") ?? "0,00")
+                </h3>
+                <small class="opacity-75">
+                    <i class="bi bi-percent"></i> @(portfolioSummary?.TotalProfitLoss >= 0 ? "+" : "")@(portfolioSummary?.TotalProfitLossPercentage.ToString("N2") ?? "0,00")%
+                </small>
+                @if (portfolioSummary?.DailyProfitLoss.HasValue == true)
+                {
+                    <br />
+                    <small class="opacity-75">
+                        <i class="bi bi-clock-history"></i> Bugün: ₺@portfolioSummary.DailyProfitLoss.Value.ToString("N2")
+                    </small>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card text-white bg-warning h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="card-title text-uppercase mb-0">İzleme Listesi</h6>
+                    <i class="bi bi-star-fill fs-4 opacity-50"></i>
+                </div>
+                <h3 class="mb-1">@(watchlist?.Count ?? 0)</h3>
+                <small class="opacity-75">
+                    <i class="bi bi-eye"></i> takip edilen şirket
+                </small>
+                @if (watchlist != null && watchlist.Any(w => w.TargetPrice.HasValue))
+                {
+                    <br />
+                    <small class="opacity-75">
+                        <i class="bi bi-bullseye"></i> @watchlist.Count(w => w.TargetPrice.HasValue) hedef fiyatlı
+                    </small>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="card mb-4 border-primary">
+    <div class="card-header bg-primary text-white">
+        <h6 class="mb-0"><i class="bi bi-lightning-charge"></i> Hızlı İşlemler</h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-6 col-md-3">
+                <a href="@Url.Action("Index", "Portfolio")" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-plus-circle d-block fs-4 mb-1"></i>
+                    <small>Hisse Ekle</small>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="@Url.Action("Index", "Watchlist")" class="btn btn-outline-warning w-100">
+                    <i class="bi bi-star d-block fs-4 mb-1"></i>
+                    <small>İzleme Listesi</small>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                <a href="@Url.Action("Analytics", "Portfolio")" class="btn btn-outline-info w-100">
+                    <i class="bi bi-graph-up d-block fs-4 mb-1"></i>
+                    <small>Analiz</small>
+                </a>
+            </div>
+            <div class="col-6 col-md-3">
+                @using (Html.BeginForm("UpdatePrices", "Portfolio", FormMethod.Post, new { @class = "w-100" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-success w-100">
+                        <i class="bi bi-arrow-repeat d-block fs-4 mb-1"></i>
+                        <small>Fiyat Güncelle</small>
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Portfolio Items -->
+    <div class="col-12 col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-briefcase"></i> Portföyüm</h5>
+                <a href="@Url.Action("Index", "Portfolio")" class="btn btn-sm btn-primary">
+                    <i class="bi bi-plus-circle"></i> Hisse Ekle
+                </a>
+            </div>
+            <div class="card-body">
+                @if (portfolioSummary?.AllItems != null && portfolioSummary.AllItems.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Şirket</th>
+                                    <th class="text-end">Adet</th>
+                                    <th class="text-end">Ort. Fiyat</th>
+                                    <th class="text-end">Güncel</th>
+                                    <th class="text-end">Değer</th>
+                                    <th class="text-end">Kar/Zarar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in portfolioSummary.AllItems)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>@item.Company.Code</strong><br />
+                                            <small class="text-muted">@item.Company.Name</small>
+                                        </td>
+                                        <td class="text-end">@item.Quantity.ToString("N2")</td>
+                                        <td class="text-end">₺@item.AverageBuyPrice.ToString("N2")</td>
+                                        <td class="text-end">₺@item.CurrentPrice.ToString("N2")</td>
+                                        <td class="text-end">₺@item.CurrentValue.ToString("N2")</td>
+                                        <td class="text-end">
+                                            <span class="badge @(item.ProfitLoss >= 0 ? "bg-success" : "bg-danger")">
+                                                ₺@item.ProfitLoss.ToString("N2") (@item.ProfitLossPercentage.ToString("N2")%)
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="@Url.Action("Index", "Portfolio")" class="btn btn-outline-primary">
+                            Tüm Portföyü Gör <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-briefcase" style="font-size: 3rem; opacity: 0.3;"></i>
+                        <p class="text-muted mt-3">Portföyünüzde henüz hisse bulunmuyor</p>
+                        <a href="@Url.Action("Index", "Portfolio")" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> İlk Hissenizi Ekleyin
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Top Gainers & Losers -->
+        @if (portfolioSummary?.TopGainers?.Any() == true || portfolioSummary?.TopLosers?.Any() == true)
+        {
+            <div class="row mb-4 g-3">
+                <div class="col-12 col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="bi bi-graph-up-arrow"></i> En Çok Kazandıranlar</h6>
+                        </div>
+                        <div class="card-body">
+                            @if (portfolioSummary.TopGainers.Any())
+                            {
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var item in portfolioSummary.TopGainers)
+                                    {
+                                        <li class="mb-2">
+                                            <strong>@item.Company.Code</strong>
+                                            <span class="float-end text-success">
+                                                +%@item.ProfitLossPercentage.ToString("N2")
+                                            </span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">Kazandıran hisse yok</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h6 class="mb-0"><i class="bi bi-graph-down-arrow"></i> En Çok Kaybedenler</h6>
+                        </div>
+                        <div class="card-body">
+                            @if (portfolioSummary.TopLosers.Any())
+                            {
+                                <ul class="list-unstyled mb-0">
+                                    @foreach (var item in portfolioSummary.TopLosers)
+                                    {
+                                        <li class="mb-2">
+                                            <strong>@item.Company.Code</strong>
+                                            <span class="float-end text-danger">
+                                                %@item.ProfitLossPercentage.ToString("N2")
+                                            </span>
+                                        </li>
+                                    }
+                                </ul>
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">Kaybeden hisse yok</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-12 col-lg-4">
+        <!-- Watchlist with Real-time Prices -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-star"></i> İzleme Listesi</h6>
+                <a href="@Url.Action("Index", "Watchlist")" class="btn btn-sm btn-outline-primary">
+                    Yönet
+                </a>
+            </div>
+            <div class="card-body">
+                @if (watchlist != null && watchlist.Any())
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var item in watchlist)
+                        {
+                            var priceData = stockPrices != null && stockPrices.ContainsKey(item.Company.Code) ? stockPrices[item.Company.Code] : null;
+
+                            <li class="mb-3 pb-3 border-bottom">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <a href="@Url.Action("Details", "Companies", new { id = item.CompanyId })" class="text-decoration-none">
+                                            <strong>@item.Company.Code</strong><br />
+                                            <small class="text-muted">@item.Company.Name</small>
+                                        </a>
+                                        @if (item.TargetPrice.HasValue)
+                                        {
+                                            <br />
+                                            <small class="text-info">
+                                                <i class="bi bi-bullseye"></i> Hedef: ₺@item.TargetPrice.Value.ToString("N2")
+                                            </small>
+                                        }
+                                    </div>
+                                    @if (priceData != null && priceData.IsSuccess)
+                                    {
+                                        <div class="text-end">
+                                            <strong class="d-block">₺@priceData.CurrentPrice.ToString("N2")</strong>
+                                            @if (priceData.DayChangePercent.HasValue)
+                                            {
+                                                <span class="badge badge-sm @(priceData.DayChangePercent >= 0 ? "bg-success" : "bg-danger")">
+                                                    @(priceData.DayChangePercent >= 0 ? "+" : "")%@priceData.DayChangePercent.Value.ToString("N2")
+                                                </span>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                    <div class="text-center mt-3">
+                        <a href="@Url.Action("Index", "Watchlist")" class="btn btn-sm btn-outline-primary w-100">
+                            Tümünü Gör
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center mb-0">İzleme listeniz boş</p>
+                }
+            </div>
+        </div>
+
+        <!-- KAP Notifications -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center bg-info text-white">
+                <h6 class="mb-0"><i class="bi bi-megaphone"></i> Son KAP Bildirimleri</h6>
+                <a href="@Url.Action("Index", "Kap")" class="btn btn-sm btn-outline-light btn-sm">
+                    Tümü
+                </a>
+            </div>
+            <div class="card-body p-0">
+                @if (latestKapNotifications != null && latestKapNotifications.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var kap in latestKapNotifications)
+                        {
+                            <a href="@(kap.SourceUrl ?? "#")" target="_blank" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <small class="text-primary fw-bold">@kap.Company.Code</small>
+                                    <small class="text-muted">@kap.PublishDate.ToString("dd.MM HH:mm")</small>
+                                </div>
+                                <p class="mb-0 small">@(kap.Title.Length > 80 ? kap.Title.Substring(0, 80) + "..." : kap.Title)</p>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="p-3 text-center text-muted">
+                        <small>Henüz KAP bildirimi yok</small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Latest News -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
+                <h6 class="mb-0"><i class="bi bi-newspaper"></i> Son Haberler</h6>
+                <a href="@Url.Action("Index", "News")" class="btn btn-sm btn-outline-light btn-sm">
+                    Tümü
+                </a>
+            </div>
+            <div class="card-body p-0">
+                @if (latestNews != null && latestNews.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var news in latestNews)
+                        {
+                            <a href="@(news.SourceUrl ?? "#")" target="_blank" class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between mb-1">
+                                    <small class="text-muted">@news.Source</small>
+                                    <small class="text-muted">@news.PublishDate.ToString("dd.MM HH:mm")</small>
+                                </div>
+                                <p class="mb-0 small fw-bold">@(news.Title.Length > 70 ? news.Title.Substring(0, 70) + "..." : news.Title)</p>
+                            </a>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="p-3 text-center text-muted">
+                        <small>Henüz haber yok</small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Favorites -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="bi bi-bookmark"></i> Favoriler</h6>
+                <a href="@Url.Action("Index", "Favorites")" class="btn btn-sm btn-outline-primary">
+                    Tümü
+                </a>
+            </div>
+            <div class="card-body">
+                @if (favorites != null && favorites.Any())
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var fav in favorites)
+                        {
+                            <li class="mb-2">
+                                <i class="bi bi-bookmark-fill text-warning"></i>
+                                <small class="text-muted">@fav.EntityType</small>
+                                <br />
+                                <small>@fav.AddedAt.ToString("dd.MM.yyyy")</small>
+                            </li>
+                        }
+                    </ul>
+                    <div class="text-center mt-3">
+                        <a href="@Url.Action("Index", "Favorites")" class="btn btn-sm btn-outline-primary w-100">
+                            Tüm Favoriler
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted text-center mb-0">Favori içerik yok</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

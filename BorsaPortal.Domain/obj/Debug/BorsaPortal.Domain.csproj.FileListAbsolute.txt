@@ -1,0 +1,17 @@
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\BorsaPortal.Domain.dll
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\BorsaPortal.Domain.pdb
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\EntityFramework.dll
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\Microsoft.AspNet.Identity.Core.dll
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\Microsoft.AspNet.Identity.EntityFramework.dll
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\EntityFramework.xml
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\Microsoft.AspNet.Identity.Core.xml
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\Microsoft.AspNet.Identity.EntityFramework.xml
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\tr\Microsoft.AspNet.Identity.Core.resources.dll
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\bin\Debug\tr\Microsoft.AspNet.Identity.EntityFramework.resources.dll
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\obj\Debug\BorsaPortal.Domain.csproj.AssemblyReference.cache
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\obj\Debug\BorsaPortal.Domain.csproj.CoreCompileInputs.cache
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\obj\Debug\BorsaPor.AF3E58C0.Up2Date
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\obj\Debug\BorsaPortal.Domain.dll
+C:\Users\Mesut GÜR\Desktop\Project\GithubRepo\BorsaPortal\BorsaPortal.Domain\obj\Debug\BorsaPortal.Domain.pdb

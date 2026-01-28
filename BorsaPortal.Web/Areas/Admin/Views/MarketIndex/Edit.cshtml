@@ -1,0 +1,106 @@
+@model BorsaPortal.Web.Areas.Admin.ViewModels.MarketIndexViewModel
+
+@{
+    ViewBag.Title = "Piyasa Endeksi Düzenle";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Piyasa Endeksi Düzenle</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-10">
+        <div class="card">
+            <div class="card-body">
+                @using (Html.BeginForm("Edit", "MarketIndex", FormMethod.Post, new { @class = "needs-validation" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(model => model.Id)
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                @Html.LabelFor(model => model.Code, new { @class = "form-label" })
+                                @Html.TextBoxFor(model => model.Code, new { @class = "form-control", placeholder = "Örn: XU100" })
+                                @Html.ValidationMessageFor(model => model.Code, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                @Html.LabelFor(model => model.Name, new { @class = "form-label" })
+                                @Html.TextBoxFor(model => model.Name, new { @class = "form-control", placeholder = "Örn: BIST 100" })
+                                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Description, new { @class = "form-label" })
+                        @Html.TextAreaFor(model => model.Description, new { @class = "form-control", rows = 3 })
+                        @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                @Html.LabelFor(model => model.CurrentValue, new { @class = "form-label" })
+                                @Html.TextBoxFor(model => model.CurrentValue, new { @class = "form-control", type = "text", placeholder = "Örn: 9850.50" })
+                                @Html.ValidationMessageFor(model => model.CurrentValue, "", new { @class = "text-danger" })
+                                <small class="form-text text-muted">Endeksin güncel değeri</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                @Html.LabelFor(model => model.DailyChange, new { @class = "form-label" })
+                                @Html.TextBoxFor(model => model.DailyChange, new { @class = "form-control", type = "text", placeholder = "Örn: 1.25" })
+                                @Html.ValidationMessageFor(model => model.DailyChange, "", new { @class = "text-danger" })
+                                <small class="form-text text-muted">Günlük değişim yüzdesi (+ veya -)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                @Html.LabelFor(model => model.AveragePE, new { @class = "form-label" })
+                                @Html.TextBoxFor(model => model.AveragePE, new { @class = "form-control", type = "text", placeholder = "Örn: 12.50" })
+                                @Html.ValidationMessageFor(model => model.AveragePE, "", new { @class = "text-danger" })
+                                <small class="form-text text-muted">Endeksin ortalama Fiyat/Kazanç oranı</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                @Html.LabelFor(model => model.AveragePB, new { @class = "form-label" })
+                                @Html.TextBoxFor(model => model.AveragePB, new { @class = "form-control", type = "text", placeholder = "Örn: 1.25" })
+                                @Html.ValidationMessageFor(model => model.AveragePB, "", new { @class = "text-danger" })
+                                <small class="form-text text-muted">Endeksin ortalama Piyasa Değeri/Defter Değeri oranı</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                @Html.LabelFor(model => model.TotalMarketCap, new { @class = "form-label" })
+                                @Html.TextBoxFor(model => model.TotalMarketCap, new { @class = "form-control", type = "text", placeholder = "Örn: 5000000000" })
+                                @Html.ValidationMessageFor(model => model.TotalMarketCap, "", new { @class = "text-danger" })
+                                <small class="form-text text-muted">Toplam piyasa değeri (TL)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary me-md-2">İptal</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Güncelle
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

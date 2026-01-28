@@ -1,0 +1,297 @@
+@model IEnumerable<BorsaPortal.Domain.Entities.RssFeedSource>
+
+@{
+    ViewBag.Title = "Haber Otomasyonu";
+    var recentNews = ViewBag.RecentNews as List<BorsaPortal.Domain.Entities.News>;
+    var totalActiveSources = ViewBag.TotalActiveSources as int? ?? 0;
+    var totalSources = ViewBag.TotalSources as int? ?? 0;
+    var totalAutoFetchedNews = ViewBag.TotalAutoFetchedNews as int? ?? 0;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-robot"></i> Haber Otomasyonu Panosu
+    </h2>
+    @using (Html.BeginForm("SyncAll", "NewsAutomation", FormMethod.Post, new { @class = "d-inline" }))
+    {
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-primary" id="syncAllBtn">
+            <i class="bi bi-arrow-repeat"></i> Tüm Kaynakları Senkronize Et
+        </button>
+    }
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="bi bi-check-circle"></i> @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle"></i> @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Toplam Kaynak</h5>
+                        <h2 class="mb-0">@totalSources</h2>
+                    </div>
+                    <div>
+                        <i class="bi bi-rss-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+                <small>@totalActiveSources aktif</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Otomatik Haber</h5>
+                        <h2 class="mb-0">@totalAutoFetchedNews</h2>
+                    </div>
+                    <div>
+                        <i class="bi bi-newspaper" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+                <small>Toplam çekilen haber sayısı</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Aktif Kaynak</h5>
+                        <h2 class="mb-0">@totalActiveSources</h2>
+                    </div>
+                    <div>
+                        <i class="bi bi-check-circle-fill" style="font-size: 3rem; opacity: 0.3;"></i>
+                    </div>
+                </div>
+                <small>Çalışan RSS kaynakları</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- RSS Feed Sources -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-rss"></i> RSS Feed Kaynakları</h5>
+        <a href="@Url.Action("Index", "RssFeedSource")" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-gear"></i> Kaynakları Yönet
+        </a>
+    </div>
+    <div class="card-body">
+        @if (!Model.Any())
+        {
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i>
+                Henüz RSS feed kaynağı eklenmemiş.
+                <a href="@Url.Action("Create", "RssFeedSource")" class="alert-link">Hemen kaynak ekleyin</a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Durum</th>
+                            <th>Kaynak Adı</th>
+                            <th>Son Çekilme</th>
+                            <th>Aralık</th>
+                            <th>Toplam Haber</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var source in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (source.IsActive)
+                                    {
+                                        <span class="badge bg-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Pasif</span>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@source.Name</strong>
+                                    @if (!string.IsNullOrEmpty(source.Description))
+                                    {
+                                        <br />
+                                        <small class="text-muted">@source.Description</small>
+                                    }
+                                </td>
+                                <td>
+                                    @if (source.LastFetchedAt.HasValue)
+                                    {
+                                        var diff = DateTime.Now - source.LastFetchedAt.Value;
+                                        if (diff.TotalMinutes < 60)
+                                        {
+                                            <span class="text-success">@((int)diff.TotalMinutes) dk önce</span>
+                                        }
+                                        else if (diff.TotalHours < 24)
+                                        {
+                                            <span class="text-warning">@((int)diff.TotalHours) saat önce</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">@((int)diff.TotalDays) gün önce</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Hiç</span>
+                                    }
+                                </td>
+                                <td>@source.FetchIntervalMinutes dk</td>
+                                <td>
+                                    <span class="badge bg-primary">@source.ItemsFetchedCount</span>
+                                </td>
+                                <td>
+                                    @using (Html.BeginForm("SyncFeed", "NewsAutomation", new { id = source.Id }, FormMethod.Post, new { @class = "d-inline" }))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Bu kaynağı senkronize et">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Recent Auto-Fetched News -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-clock-history"></i> Son Çekilen Haberler</h5>
+        <a href="@Url.Action("AutoFetchedNews")" class="btn btn-sm btn-outline-primary">
+            Tümünü Gör
+        </a>
+    </div>
+    <div class="card-body">
+        @if (recentNews == null || !recentNews.Any())
+        {
+            <p class="text-muted mb-0">Henüz otomatik çekilen haber yok.</p>
+        }
+        else
+        {
+            <div class="list-group list-group-flush">
+                @foreach (var news in recentNews)
+                {
+                    <div class="list-group-item px-0">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">@news.Title</h6>
+                            <small class="text-muted">@news.CreatedAt.ToString("HH:mm")</small>
+                        </div>
+                        <p class="mb-1 small text-muted">
+                            @if (!string.IsNullOrEmpty(news.Summary))
+                            {
+                                @(news.Summary.Length > 150 ? news.Summary.Substring(0, 150) + "..." : news.Summary)
+                            }
+                        </p>
+                        <small>
+                            <span class="badge bg-secondary">@news.Source</span>
+                            @if (news.Company != null)
+                            {
+                                <span class="badge bg-info">@news.Company.Code</span>
+                            }
+                            @if (news.Sector != null)
+                            {
+                                <span class="badge bg-success">@news.Sector.Name</span>
+                            }
+                            <span class="text-muted">· @news.CreatedAt.ToString("dd.MM.yyyy")</span>
+                        </small>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<div class="alert alert-light mt-4">
+    <h6><i class="bi bi-lightbulb"></i> Haber Otomasyonu Hakkında</h6>
+    <ul class="mb-0 small">
+        <li>RSS feed kaynakları otomatik olarak belirlenen aralıklarda kontrol edilir</li>
+        <li>Yeni haberler otomatik olarak sisteme eklenir ve duplicate kontrolü yapılır</li>
+        <li>Haberler kaynak adı, URL ve tarih bilgisi ile kaydedilir</li>
+        <li>Şirket ve sektör eşleştirmesi içerik analizi ile otomatik yapılır</li>
+        <li>Manuel senkronizasyon ile dilediğiniz zaman tüm kaynakları kontrol edebilirsiniz</li>
+    </ul>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Tüm Kaynakları Senkronize Et butonu için
+            $('#syncAllBtn').closest('form').submit(function (e) {
+                var btn = $('#syncAllBtn');
+                var originalHtml = btn.html();
+
+                btn.prop('disabled', true);
+                btn.html('<span class="spinner-border spinner-border-sm me-2"></span>Senkronize ediliyor...');
+
+                // 60 saniye timeout - eğer sayfa yenilenmezse loading'i geri al
+                var timeoutId = setTimeout(function () {
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                    alert('Senkronizasyon işlemi zaman aşımına uğradı. Lütfen sayfayı yenileyip tekrar deneyin veya internet bağlantınızı kontrol edin.');
+                }, 60000);
+
+                // Sayfa yüklenirse (başarılı redirect) timeout'u iptal et
+                $(window).on('beforeunload', function () {
+                    clearTimeout(timeoutId);
+                });
+            });
+
+            // Bireysel kaynak senkronizasyon butonları için
+            $('form[action*="SyncFeed"]').submit(function (e) {
+                var form = $(this);
+                var btn = form.find('button[type="submit"]');
+                var originalHtml = btn.html();
+
+                btn.prop('disabled', true);
+                btn.html('<span class="spinner-border spinner-border-sm"></span>');
+
+                // 60 saniye timeout - eğer sayfa yenilenmezse loading'i geri al
+                var timeoutId = setTimeout(function () {
+                    btn.prop('disabled', false);
+                    btn.html(originalHtml);
+                    alert('Senkronizasyon işlemi zaman aşımına uğradı. Lütfen sayfayı yenileyip tekrar deneyin veya internet bağlantınızı kontrol edin.');
+                }, 60000);
+
+                // Sayfa yüklenirse (başarılı redirect) timeout'u iptal et
+                $(window).on('beforeunload', function () {
+                    clearTimeout(timeoutId);
+                });
+            });
+        });
+    </script>
+}

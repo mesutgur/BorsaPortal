@@ -1,0 +1,328 @@
+@model BorsaPortal.Domain.Entities.StockValuation
+@{
+    ViewBag.Title = "Değerleme Detayları";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-file-earmark-text"></i> Değerleme Detayları</h2>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Listeye Dön
+                </a>
+            </div>
+
+            <!-- Özet Kartı -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        @if (Model.Company != null)
+                        {
+                            <text>@Model.Company.Symbol - @Model.Company.Name</text>
+                        }
+                        else
+                        {
+                            <text>Hisse Değerleme</text>
+                        }
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Değerleme Tarihi:</strong> @Model.ValuationDate.ToLocalTime().ToString("dd MMMM yyyy HH:mm")</p>
+                            <p><strong>Değerleme Yöntemi:</strong>
+                                @if (Model.ValuationMethod != null)
+                                {
+                                    <span class="badge bg-secondary">@Model.ValuationMethod.Name</span>
+                                }
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Güncel Hisse Fiyatı:</strong> <span class="text-primary">₺@string.Format("{0:N2}", Model.CurrentPrice)</span></p>
+                            @if (Model.TargetPrice.HasValue)
+                            {
+                                <p><strong>Hedef Fiyat:</strong> <span class="text-success fs-5">₺@string.Format("{0:N2}", Model.TargetPrice.Value)</span></p>
+                            }
+                        </div>
+                    </div>
+
+                    @if (Model.PremiumPotential.HasValue)
+                    {
+                        var premium = Model.PremiumPotential.Value;
+                        var badgeClass = premium > 0 ? "bg-success" : (premium < 0 ? "bg-danger" : "bg-secondary");
+                        var icon = premium > 0 ? "bi-graph-up-arrow" : (premium < 0 ? "bi-graph-down-arrow" : "bi-dash");
+
+                        <div class="alert @(premium > 0 ? "alert-success" : (premium < 0 ? "alert-danger" : "alert-secondary")) mt-3">
+                            <h5 class="mb-0">
+                                <i class="bi @icon"></i>
+                                Prim Potansiyeli: <strong>@string.Format("{0:+0.00;-0.00;0}%", premium)</strong>
+                            </h5>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Girdi Parametreleri -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Girdi Parametreleri</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @if (Model.PaidInCapital.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>Ödenmiş Sermaye:</strong><br />
+                                ₺@string.Format("{0:N2}", Model.PaidInCapital.Value)
+                            </div>
+                        }
+                        @if (Model.QuarterlyNetProfit.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>Çeyreklik Net Kar:</strong><br />
+                                ₺@string.Format("{0:N2}", Model.QuarterlyNetProfit.Value)
+                            </div>
+                        }
+                        @if (Model.SixMonthNetProfit.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>6 Aylık Net Kar:</strong><br />
+                                ₺@string.Format("{0:N2}", Model.SixMonthNetProfit.Value)
+                            </div>
+                        }
+                        @if (Model.NineMonthNetProfit.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>9 Aylık Net Kar:</strong><br />
+                                ₺@string.Format("{0:N2}", Model.NineMonthNetProfit.Value)
+                            </div>
+                        }
+                        @if (Model.YearlyNetProfit.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>Yıllık Net Kar:</strong><br />
+                                ₺@string.Format("{0:N2}", Model.YearlyNetProfit.Value)
+                            </div>
+                        }
+                        @if (Model.Equity.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>Özsermaye:</strong><br />
+                                ₺@string.Format("{0:N2}", Model.Equity.Value)
+                            </div>
+                        }
+                        @if (Model.CurrentMarketValue.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>Güncel Piyasa Değeri:</strong><br />
+                                ₺@string.Format("{0:N2}", Model.CurrentMarketValue.Value)
+                            </div>
+                        }
+                        @if (Model.StockPE.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>Hisse F/K Oranı:</strong><br />
+                                @string.Format("{0:N2}", Model.StockPE.Value)
+                            </div>
+                        }
+                        @if (Model.StockPB.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>Hisse PD/DD Oranı:</strong><br />
+                                @string.Format("{0:N2}", Model.StockPB.Value)
+                            </div>
+                        }
+                        @if (Model.SectorPE.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>Sektör/BIST100 F/K Oranı:</strong><br />
+                                @string.Format("{0:N2}", Model.SectorPE.Value)
+                            </div>
+                        }
+                        @if (Model.SectorPB.HasValue)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <strong>Sektör/BIST100 PD/DD Oranı:</strong><br />
+                                @string.Format("{0:N2}", Model.SectorPB.Value)
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Geçmiş Yıl Verileri -->
+                    @{
+                        var year1 = DateTime.Now.Year - 3;
+                        var year2 = DateTime.Now.Year - 2;
+                        var year3 = DateTime.Now.Year - 1;
+                        var year4 = DateTime.Now.Year - 1;
+                    }
+                    @if (Model.NetProfitYear1.HasValue || Model.NetProfitYear2.HasValue || Model.NetProfitYear3.HasValue || Model.NetProfitYear4.HasValue)
+                    {
+                        <hr />
+                        <h6 class="mt-3 mb-3">Geçmiş Yıl Verileri</h6>
+                        <div class="row">
+                            @if (Model.NetProfitYear1.HasValue || Model.EquityYear1.HasValue)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <strong>@year1:</strong><br />
+                                    @if (Model.NetProfitYear1.HasValue)
+                                    {
+                                        <span>Net Kar: ₺@string.Format("{0:N2}", Model.NetProfitYear1.Value)</span><br />
+                                    }
+                                    @if (Model.EquityYear1.HasValue)
+                                    {
+                                        <span>Özsermaye: ₺@string.Format("{0:N2}", Model.EquityYear1.Value)</span>
+                                    }
+                                </div>
+                            }
+                            @if (Model.NetProfitYear2.HasValue || Model.EquityYear2.HasValue)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <strong>@year2:</strong><br />
+                                    @if (Model.NetProfitYear2.HasValue)
+                                    {
+                                        <span>Net Kar: ₺@string.Format("{0:N2}", Model.NetProfitYear2.Value)</span><br />
+                                    }
+                                    @if (Model.EquityYear2.HasValue)
+                                    {
+                                        <span>Özsermaye: ₺@string.Format("{0:N2}", Model.EquityYear2.Value)</span>
+                                    }
+                                </div>
+                            }
+                            @if (Model.NetProfitYear3.HasValue || Model.EquityYear3.HasValue)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <strong>@year3:</strong><br />
+                                    @if (Model.NetProfitYear3.HasValue)
+                                    {
+                                        <span>Net Kar: ₺@string.Format("{0:N2}", Model.NetProfitYear3.Value)</span><br />
+                                    }
+                                    @if (Model.EquityYear3.HasValue)
+                                    {
+                                        <span>Özsermaye: ₺@string.Format("{0:N2}", Model.EquityYear3.Value)</span>
+                                    }
+                                </div>
+                            }
+                            @if (Model.NetProfitYear4.HasValue || Model.EquityYear4.HasValue)
+                            {
+                                <div class="col-md-6 mb-3">
+                                    <strong>@year4:</strong><br />
+                                    @if (Model.NetProfitYear4.HasValue)
+                                    {
+                                        <span>Net Kar: ₺@string.Format("{0:N2}", Model.NetProfitYear4.Value)</span><br />
+                                    }
+                                    @if (Model.EquityYear4.HasValue)
+                                    {
+                                        <span>Özsermaye: ₺@string.Format("{0:N2}", Model.EquityYear4.Value)</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Hesaplama Sonuçları -->
+            @if (Model.EstimatedYearEndProfit.HasValue || Model.Calculations != null && Model.Calculations.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">Hesaplama Sonuçları</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.EstimatedYearEndProfit.HasValue)
+                        {
+                            <div class="alert alert-info">
+                                <strong>Tahmini Yıl Sonu Karı:</strong> ₺@string.Format("{0:N2}", Model.EstimatedYearEndProfit.Value)
+                            </div>
+                        }
+
+                        @if (Model.Calculations != null && Model.Calculations.Any())
+                        {
+                            <h6 class="mb-3">Detaylı Hesaplamalar</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Hesaplama Adı</th>
+                                            <th class="text-end">Hesaplanan Fiyat</th>
+                                            <th>Formül</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var calc in Model.Calculations.OrderBy(c => c.CalculationType))
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <strong>@calc.CalculationName</strong><br />
+                                                    <small class="text-muted">@calc.CalculationType</small>
+                                                </td>
+                                                <td class="text-end">
+                                                    <strong>₺@string.Format("{0:N2}", calc.CalculatedPrice)</strong>
+                                                </td>
+                                                <td>
+                                                    <small>@(calc.FormulaWithValues ?? calc.Formula)</small>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- Notlar -->
+            @if (!string.IsNullOrWhiteSpace(Model.Notes))
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Notlar</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-0">@Model.Notes</p>
+                    </div>
+                </div>
+            }
+
+            <!-- Yöntem Bilgisi -->
+            @if (Model.ValuationMethod != null && !string.IsNullOrWhiteSpace(Model.ValuationMethod.Description))
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Değerleme Yöntemi Hakkında</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>@Model.ValuationMethod.Name</strong></p>
+                        <p class="mb-0">@Model.ValuationMethod.Description</p>
+                        @if (!string.IsNullOrWhiteSpace(Model.ValuationMethod.Formula))
+                        {
+                            <hr />
+                            <p class="mb-0"><strong>Formül:</strong><br />@Model.ValuationMethod.Formula</p>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- İşlemler -->
+            <div class="d-flex justify-content-between">
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Listeye Dön
+                </a>
+                @using (Html.BeginForm("Delete", "Valuation", new { id = Model.Id }, FormMethod.Post, new { @class = "d-inline" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger"
+                            onclick="return confirm('Bu değerlemeyi silmek istediğinizden emin misiniz?');">
+                        <i class="bi bi-trash"></i> Sil
+                    </button>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+}

@@ -1,0 +1,337 @@
+@using BorsaPortal.Domain.Entities
+@using BorsaPortal.Infrastructure.Services
+@{
+    ViewBag.Title = "Ana Sayfa - Borsa Portal";
+}
+
+<!-- Modern Koyu Tema CSS -->
+<link rel="stylesheet" href="@Url.Content("~/Content/dark-modern.css")" />
+
+<!-- Arama Bölümü -->
+<div class="search-section">
+    <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text"
+               id="stockSearchInput"
+               class="form-control"
+               placeholder="Hisse ara..."
+               autocomplete="off">
+        <div id="searchResults" class="dropdown-menu w-100" style="max-height: 300px; overflow-y: auto;"></div>
+    </div>
+</div>
+
+<!-- Promo Banner -->
+<div class="promo-banner">
+    <div class="promo-content text-center">
+        <h3><i class="bi bi-graph-up-arrow"></i> Borsa Portal ile Yatırımlarınızı Takip Edin</h3>
+        <p>Gerçek zamanlı hisse verileri, değerleme araçları ve portföy yönetimi ile yatırım kararlarınızı güçlendirin</p>
+        @if (!Request.IsAuthenticated)
+        {
+            <a href="@Url.Action("Register", "Account")" class="btn">
+                <i class="bi bi-rocket-takeoff"></i> Hemen Başla
+            </a>
+        }
+        else
+        {
+            <a href="@Url.Action("Index", "Screener")" class="btn">
+                <i class="bi bi-filter-circle"></i> Hisse Tarayıcıyı Keşfet
+            </a>
+        }
+    </div>
+</div>
+
+<!-- Ana Kategoriler -->
+<div class="stock-categories">
+    <!-- Kazandıran Hisseler -->
+    <div class="category-card">
+        <div class="category-header">
+            <h3 class="category-title">Kazandıran Hisseler</h3>
+            <div class="category-icon help">
+                <i class="bi bi-question-circle"></i>
+            </div>
+        </div>
+        <div class="stock-list" id="topGainers">
+            <!-- Skeleton Loading -->
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+        </div>
+    </div>
+
+    <!-- Kaybettiren Hisseler -->
+    <div class="category-card">
+        <div class="category-header">
+            <h3 class="category-title">Kaybettiren Hisseler</h3>
+            <div class="category-icon help">
+                <i class="bi bi-question-circle"></i>
+            </div>
+        </div>
+        <div class="stock-list" id="topLosers">
+            <!-- Skeleton Loading -->
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+        </div>
+    </div>
+
+    <!-- Yüksek Hacimli Hisseler -->
+    <div class="category-card">
+        <div class="category-header">
+            <h3 class="category-title">Yüksek Hacimli Hisseler</h3>
+            <div class="category-icon help">
+                <i class="bi bi-question-circle"></i>
+            </div>
+        </div>
+        <div class="stock-list" id="highVolumeStocks">
+            <!-- Skeleton Loading -->
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+            <div class="skeleton skeleton-item"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Hızlı Erişim Butonları -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="@Url.Action("Index", "News")" class="btn btn-outline-light">
+                <i class="bi bi-newspaper"></i> Haberler
+            </a>
+            <a href="@Url.Action("Index", "KapNotifications")" class="btn btn-outline-light">
+                <i class="bi bi-bell"></i> KAP Bildirimleri
+            </a>
+            <a href="@Url.Action("Index", "Companies")" class="btn btn-outline-light">
+                <i class="bi bi-building"></i> Şirketler
+            </a>
+            @if (Request.IsAuthenticated)
+            {
+                <a href="@Url.Action("Index", "Portfolio")" class="btn btn-outline-light">
+                    <i class="bi bi-briefcase"></i> Portföyüm
+                </a>
+                <a href="@Url.Action("Index", "Valuation")" class="btn btn-outline-light">
+                    <i class="bi bi-calculator"></i> Değerleme
+                </a>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Koyu temayı aktif et
+        document.body.classList.add('dark-modern');
+
+        // Rastgele renk seçimi
+        const stockColors = ['red', 'blue', 'green', 'purple', 'orange', 'pink', 'cyan', 'yellow', 'indigo', 'teal'];
+
+        function getRandomColor() {
+            return stockColors[Math.floor(Math.random() * stockColors.length)];
+        }
+
+        // Hisse kartı oluştur
+        function createStockCard(stock) {
+            const changeClass = stock.ChangePercent > 0 ? 'positive' : stock.ChangePercent < 0 ? 'negative' : 'neutral';
+            const changeIcon = stock.ChangePercent > 0 ? 'arrow-up' : stock.ChangePercent < 0 ? 'arrow-down' : 'dash';
+            const colorClass = getRandomColor();
+
+            return `
+                <div class="stock-item" onclick="window.location.href='@Url.Action("Details", "Companies")?code=' + '${stock.Code}'">
+                    <div class="stock-info">
+                        <div class="stock-icon ${colorClass}">
+                            ${stock.Code.substring(0, 3)}
+                        </div>
+                        <div class="stock-details">
+                            <div class="stock-code">${stock.Code}</div>
+                            <div class="stock-name">${stock.Name.length > 20 ? stock.Name.substring(0, 20) + '...' : stock.Name}</div>
+                        </div>
+                    </div>
+                    <div class="stock-change">
+                        <div class="stock-price">₺${stock.Price.toFixed(2)}</div>
+                        <div class="stock-percentage ${changeClass}">
+                            <i class="bi bi-${changeIcon}"></i>
+                            ${stock.ChangePercent > 0 ? '+' : ''}${stock.ChangePercent.toFixed(2)}%
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Boş durum mesajı
+        function createEmptyState(message) {
+            return `
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // Hata durumu mesajı
+        function createErrorState(message, showRetry = false) {
+            var retryButton = showRetry ? '<button class="btn btn-sm btn-outline-primary mt-2" onclick="location.reload()">Tekrar Dene</button>' : '';
+            return `
+                <div class="empty-state">
+                    <i class="bi bi-exclamation-triangle text-danger"></i>
+                    <p class="text-danger">${message}</p>
+                    ${retryButton}
+                </div>
+            `;
+        }
+
+        // Kazandıran hisseleri yükle
+        function loadTopGainers() {
+            $.ajax({
+                url: '@Url.Action("GetTopGainers", "Home")',
+                type: 'GET',
+                data: { count: 5 },
+                success: function(response) {
+                    const container = $('#topGainers');
+                    if (response.success && response.data && response.data.length > 0) {
+                        container.html(response.data.map(stock => createStockCard(stock)).join(''));
+                    } else {
+                        container.html(createEmptyState('Şu anda kazandıran hisse bulunmamaktadır.'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Top gainers error:', error, 'Status:', status, 'XHR:', xhr);
+                    var errorMessage = 'Veri yüklenirken hata oluştu.';
+                    if (xhr.status === 429) {
+                        errorMessage = 'API limiti aşıldı. Lütfen bir süre sonra tekrar deneyin.';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+                    } else if (status === 'timeout') {
+                        errorMessage = 'İstek zaman aşımına uğradı.';
+                    }
+                    $('#topGainers').html(createErrorState(errorMessage, true));
+                }
+            });
+        }
+
+        // Kaybettiren hisseleri yükle
+        function loadTopLosers() {
+            $.ajax({
+                url: '@Url.Action("GetTopLosers", "Home")',
+                type: 'GET',
+                data: { count: 5 },
+                success: function(response) {
+                    const container = $('#topLosers');
+                    if (response.success && response.data && response.data.length > 0) {
+                        container.html(response.data.map(stock => createStockCard(stock)).join(''));
+                    } else {
+                        container.html(createEmptyState('Şu anda kaybettiren hisse bulunmamaktadır.'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Top losers error:', error, 'Status:', status, 'XHR:', xhr);
+                    var errorMessage = 'Veri yüklenirken hata oluştu.';
+                    if (xhr.status === 429) {
+                        errorMessage = 'API limiti aşıldı. Lütfen bir süre sonra tekrar deneyin.';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+                    } else if (status === 'timeout') {
+                        errorMessage = 'İstek zaman aşımına uğradı.';
+                    }
+                    $('#topLosers').html(createErrorState(errorMessage, true));
+                }
+            });
+        }
+
+        // Yüksek hacimli hisseleri yükle
+        function loadHighVolumeStocks() {
+            $.ajax({
+                url: '@Url.Action("GetHighVolumeStocks", "Home")',
+                type: 'GET',
+                data: { count: 5 },
+                success: function(response) {
+                    const container = $('#highVolumeStocks');
+                    if (response.success && response.data && response.data.length > 0) {
+                        container.html(response.data.map(stock => createStockCard(stock)).join(''));
+                    } else {
+                        container.html(createEmptyState('Şu anda yüksek hacimli hisse bulunmamaktadır.'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('High volume stocks error:', error, 'Status:', status, 'XHR:', xhr);
+                    var errorMessage = 'Veri yüklenirken hata oluştu.';
+                    if (xhr.status === 429) {
+                        errorMessage = 'API limiti aşıldı. Lütfen bir süre sonra tekrar deneyin.';
+                    } else if (xhr.status === 500) {
+                        errorMessage = 'Sunucu hatası. Lütfen daha sonra tekrar deneyin.';
+                    } else if (status === 'timeout') {
+                        errorMessage = 'İstek zaman aşımına uğradı.';
+                    }
+                    $('#highVolumeStocks').html(createErrorState(errorMessage, true));
+                }
+            });
+        }
+
+        // Hisse arama
+        let searchTimeout;
+        $('#stockSearchInput').on('input', function() {
+            const query = $(this).val().trim();
+            const resultsContainer = $('#searchResults');
+
+            clearTimeout(searchTimeout);
+
+            if (query.length < 2) {
+                resultsContainer.removeClass('show');
+                return;
+            }
+
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '@Url.Action("Search", "Companies")',
+                    type: 'GET',
+                    data: { query: query },
+                    success: function(response) {
+                        if (response && response.length > 0) {
+                            let html = '';
+                            response.slice(0, 10).forEach(function(company) {
+                                html += `
+                                    <a class="dropdown-item" href="@Url.Action("Details", "Companies")?code=${company.Code}">
+                                        <strong>${company.Code}</strong> - ${company.Name}
+                                        ${company.SectorName ? '<br><small class="text-muted">' + company.SectorName + '</small>' : ''}
+                                    </a>
+                                `;
+                            });
+                            resultsContainer.html(html).addClass('show');
+                        } else {
+                            resultsContainer.html('<div class="dropdown-item text-muted">Sonuç bulunamadı</div>').addClass('show');
+                        }
+                    },
+                    error: function() {
+                        resultsContainer.removeClass('show');
+                    }
+                });
+            }, 300);
+        });
+
+        // Dışarı tıklandığında arama sonuçlarını kapat
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.search-box').length) {
+                $('#searchResults').removeClass('show');
+            }
+        });
+
+        // Sayfa yüklendiğinde verileri çek
+        $(document).ready(function() {
+            loadTopGainers();
+            loadTopLosers();
+            loadHighVolumeStocks();
+
+            // 60 saniyede bir otomatik güncelle
+            setInterval(function() {
+                loadTopGainers();
+                loadTopLosers();
+                loadHighVolumeStocks();
+            }, 60000);
+        });
+    </script>
+}

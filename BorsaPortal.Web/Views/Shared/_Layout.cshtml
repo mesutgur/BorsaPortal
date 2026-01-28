@@ -1,0 +1,305 @@
+﻿<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            @Html.ActionLink("Borsa Portal", "Index", "Home", new { area = "" }, new { @class = "navbar-brand fw-bold" })
+            <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="Menüyü aç/kapat" aria-controls="navbarNav"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        @Html.ActionLink("Ana Sayfa", "Index", "Home", new { area = "" }, new { @class = "nav-link" })
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("Haberler", "Index", "News", new { area = "" }, new { @class = "nav-link" })
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("KAP Bildirimleri", "Index", "KapNotifications", new { area = "" }, new { @class = "nav-link" })
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("Şirketler", "Index", "Companies", new { area = "" }, new { @class = "nav-link" })
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("Sektörler", "Index", "Sectors", new { area = "" }, new { @class = "nav-link" })
+                    </li>
+                    @if (Request.IsAuthenticated)
+                    {
+                        <li class="nav-item">
+                            @Html.ActionLink("Tarayıcı", "Index", "Screener", new { area = "" }, new { @class = "nav-link" })
+                        </li>
+                    }
+                    <li class="nav-item">
+                        @Html.ActionLink("Blog", "Index", "Blog", new { area = "" }, new { @class = "nav-link" })
+                    </li>
+                    @if (Request.IsAuthenticated)
+                    {
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userFeaturesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i> Hesabım
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="userFeaturesDropdown">
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Index", "UserDashboard")">
+                                        <i class="bi bi-speedometer2"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Portfolio")">
+                                        <i class="bi bi-briefcase"></i> Portföyüm
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Watchlist")">
+                                        <i class="bi bi-star"></i> İzleme Listesi
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Favorites")">
+                                        <i class="bi bi-bookmark"></i> Favorilerim
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Valuation")">
+                                        <i class="bi bi-calculator"></i> Değerlemelerim
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Reports")">
+                                        <i class="bi bi-file-earmark-bar-graph"></i> Raporlar
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Analytics", "Portfolio")">
+                                        <i class="bi bi-pie-chart"></i> Analiz
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Settings")">
+                                        <i class="bi bi-gear"></i> Ayarlar
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="@Url.Action("Index", "Notifications")">
+                                <i class="bi bi-bell"></i>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge" style="display: none;">
+                                    0
+                                </span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link theme-toggle" href="javascript:void(0)" onclick="toggleTheme()" title="Tema Değiştir">
+                                <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+                            </a>
+                        </li>
+                    }
+                    <li class="nav-item">
+                        @Html.ActionLink("Hakkımızda", "About", "Home", new { area = "" }, new { @class = "nav-link" })
+                    </li>
+                    <li class="nav-item">
+                        @Html.ActionLink("İletişim", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })
+                    </li>
+                </ul>
+                @Html.Partial("_LoginPartial")
+            </div>
+        </div>
+    </nav>
+    <div class="container body-content mt-4 mb-5">
+        @RenderBody()
+    </div>
+
+    <footer class="bg-dark text-white mt-5">
+        <div class="container py-4">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h5>Borsa Portal</h5>
+                    <p class="small">Türkiye'nin en güncel borsa ve finans haber platformu. Anlık KAP bildirimleri, hisse senedi haberleri ve piyasa analizleri.</p>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>Hızlı Bağlantılar</h5>
+                    <ul class="list-unstyled small">
+                        <li>@Html.ActionLink("Ana Sayfa", "Index", "Home", new { area = "" }, new { @class = "text-white text-decoration-none" })</li>
+                        <li>@Html.ActionLink("Haberler", "Index", "News", new { area = "" }, new { @class = "text-white text-decoration-none" })</li>
+                        <li>@Html.ActionLink("KAP Bildirimleri", "Index", "KapNotifications", new { area = "" }, new { @class = "text-white text-decoration-none" })</li>
+                        <li>@Html.ActionLink("Blog", "Index", "Blog", new { area = "" }, new { @class = "text-white text-decoration-none" })</li>
+                        <li>@Html.ActionLink("Hakkımızda", "About", "Home", new { area = "" }, new { @class = "text-white text-decoration-none" })</li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h5>İletişim</h5>
+                    <p class="small">
+                        <i class="bi bi-envelope"></i> info@borsaportal.com<br />
+                        <i class="bi bi-telephone"></i> +90 (212) 000 00 00
+                    </p>
+                </div>
+            </div>
+            <hr class="border-light" />
+            <div class="text-center small">
+                <p class="mb-0">&copy; @DateTime.Now.Year Borsa Portal. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </footer>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+    @RenderSection("scripts", required: false)
+
+    @if (Request.IsAuthenticated)
+    {
+        <script>
+            // Update notification badge
+            function updateNotificationBadge() {
+                $.ajax({
+                    url: '@Url.Action("GetUnreadCount", "Notifications")',
+                    type: 'GET',
+                    success: function(response) {
+                        var badge = $('.notification-badge');
+                        if (response.count > 0) {
+                            badge.text(response.count > 99 ? '99+' : response.count);
+                            badge.show();
+                        } else {
+                            badge.hide();
+                        }
+                    }
+                });
+            }
+
+            $(document).ready(function() {
+                // Update badge on page load
+                updateNotificationBadge();
+
+                // Update badge every 60 seconds
+                setInterval(updateNotificationBadge, 60000);
+            });
+        </script>
+    }
+
+    <script>
+        // Dark Mode Toggle
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+
+            updateThemeIcon(newTheme);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('theme-icon');
+            if (theme === 'dark') {
+                icon.className = 'bi bi-sun-fill';
+            } else {
+                icon.className = 'bi bi-moon-stars-fill';
+            }
+        }
+
+        // Load saved theme on page load
+        (function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        })();
+
+        // Toast Notification System
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toast-container') || createToastContainer();
+            const toastId = 'toast-' + Date.now();
+
+            const toastHTML = `
+                <div class="toast align-items-center text-white bg-${type} border-0" role="alert" id="${toastId}" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : 'info-circle'}"></i>
+                            ${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                    </div>
+                </div>
+            `;
+
+            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+
+            const toastElement = document.getElementById(toastId);
+            const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+            toast.show();
+
+            // Remove toast after it's hidden
+            toastElement.addEventListener('hidden.bs.toast', function() {
+                toastElement.remove();
+            });
+        }
+
+        function createToastContainer() {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'toast-container';
+            document.body.appendChild(container);
+            return container;
+        }
+
+        // Global Loading Spinner
+        function showLoading() {
+            const overlay = document.createElement('div');
+            overlay.id = 'loading-overlay';
+            overlay.className = 'spinner-overlay';
+            overlay.innerHTML = '<div class="spinner-border text-light" role="status"><span class="visually-hidden">Yükleniyor...</span></div>';
+            document.body.appendChild(overlay);
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Alt + D: Toggle Dark Mode
+            if (e.altKey && e.key === 'd') {
+                e.preventDefault();
+                toggleTheme();
+            }
+
+            // Alt + N: Go to Notifications (if authenticated)
+            if (e.altKey && e.key === 'n' && @Request.IsAuthenticated.ToString().ToLower()) {
+                e.preventDefault();
+                window.location.href = '@Url.Action("Index", "Notifications")';
+            }
+
+            // Alt + P: Go to Portfolio (if authenticated)
+            if (e.altKey && e.key === 'p' && @Request.IsAuthenticated.ToString().ToLower()) {
+                e.preventDefault();
+                window.location.href = '@Url.Action("Index", "Portfolio")';
+            }
+
+            // Alt + H: Go to Home
+            if (e.altKey && e.key === 'h') {
+                e.preventDefault();
+                window.location.href = '@Url.Action("Index", "Home")';
+            }
+        });
+    </script>
+</body>
+</html>

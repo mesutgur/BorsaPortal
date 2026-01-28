@@ -1,0 +1,74 @@
+@model BorsaPortal.Web.Areas.Admin.ViewModels.SectorViewModel
+
+@{
+    ViewBag.Title = "Sektör Düzenle";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Sektör Düzenle</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                @using (Html.BeginForm("Edit", "Sector", FormMethod.Post, new { @class = "needs-validation" }))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(model => model.Id)
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Name, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.Name, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Code, new { @class = "form-label" })
+                        @Html.TextBoxFor(model => model.Code, new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.Code, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="mb-3">
+                        @Html.LabelFor(model => model.Description, new { @class = "form-label" })
+                        @Html.TextAreaFor(model => model.Description, new { @class = "form-control", rows = 4 })
+                        @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                @Html.LabelFor(model => model.AveragePE, new { @class = "form-label" })
+                                @Html.TextBoxFor(model => model.AveragePE, new { @class = "form-control", type = "text", placeholder = "Örn: 12.50" })
+                                @Html.ValidationMessageFor(model => model.AveragePE, "", new { @class = "text-danger" })
+                                <small class="form-text text-muted">Sektörün ortalama Fiyat/Kazanç oranı</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                @Html.LabelFor(model => model.AveragePB, new { @class = "form-label" })
+                                @Html.TextBoxFor(model => model.AveragePB, new { @class = "form-control", type = "text", placeholder = "Örn: 1.25" })
+                                @Html.ValidationMessageFor(model => model.AveragePB, "", new { @class = "text-danger" })
+                                <small class="form-text text-muted">Sektörün ortalama Piyasa Değeri/Defter Değeri oranı</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary me-md-2">İptal</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> Güncelle
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

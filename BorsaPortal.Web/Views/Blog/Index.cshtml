@@ -1,0 +1,149 @@
+@model List<BorsaPortal.Domain.Entities.BlogPost>
+@using BorsaPortal.Domain.Entities
+
+@{
+    ViewBag.Title = "Blog - Borsa Portal";
+    var categories = ViewBag.Categories as List<BlogCategory> ?? new List<BlogCategory>();
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
+    var totalCount = (int)ViewBag.TotalCount;
+    var categoryId = ViewBag.CategoryId as int?;
+}
+
+<div class="mb-4">
+    <h1 class="h2">Blog</h1>
+    <p class="text-muted">Finans dünyasından analizler, yorumlar ve güncel bilgiler</p>
+</div>
+
+<!-- Kategori Filtresi -->
+@if (categories.Any())
+{
+    <div class="mb-4">
+        <div class="d-flex flex-wrap gap-2">
+            <a href="@Url.Action("Index")" class="btn @(!categoryId.HasValue ? "btn-primary" : "btn-outline-primary")">
+                Tümü
+            </a>
+            @foreach (var category in categories)
+            {
+                <a href="@Url.Action("Index", new { categoryId = category.Id })"
+                   class="btn @(categoryId == category.Id ? "btn-primary" : "btn-outline-primary")">
+                    @category.Name
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@if (ViewBag.SelectedCategory != null)
+{
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-filter"></i>
+        Kategori: <strong>@ViewBag.SelectedCategory</strong>
+        <span class="text-muted">(@totalCount yazı)</span>
+    </div>
+}
+
+<!-- Blog Yazıları -->
+@if (Model.Any())
+{
+    <div class="row g-4 mb-4">
+        @foreach (var post in Model)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm">
+                    @if (!string.IsNullOrEmpty(post.FeaturedImageUrl))
+                    {
+                        <img src="@post.FeaturedImageUrl" class="card-img-top" alt="@post.Title" style="height: 200px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-file-earmark-text" style="font-size: 3rem; color: #ccc;"></i>
+                        </div>
+                    }
+                    <div class="card-body d-flex flex-column">
+                        @if (post.Category != null)
+                        {
+                            <span class="badge bg-primary mb-2 align-self-start">@post.Category.Name</span>
+                        }
+                        <h5 class="card-title">@post.Title</h5>
+                        <p class="card-text text-muted small flex-grow-1">
+                            @if (!string.IsNullOrEmpty(post.Summary))
+                            {
+                                @(post.Summary.Length > 150 ? post.Summary.Substring(0, 150) + "..." : post.Summary)
+                            }
+                        </p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2 text-muted small">
+                                <span>
+                                    <i class="bi bi-calendar3"></i>
+                                    @if (post.PublishedAt.HasValue)
+                                    {
+                                        @post.PublishedAt.Value.ToString("dd MMM yyyy")
+                                    }
+                                    else
+                                    {
+                                        @post.CreatedAt.ToString("dd MMM yyyy")
+                                    }
+                                </span>
+                                <span>
+                                    <i class="bi bi-eye"></i> @post.ViewCount
+                                </span>
+                            </div>
+                            @if (post.Author != null)
+                            {
+                                <div class="text-muted small mb-2">
+                                    <i class="bi bi-person"></i> @post.Author.Email
+                                </div>
+                            }
+                            <a href="@Url.Action("Details", new { slug = post.Slug })" class="btn btn-primary btn-sm w-100">
+                                Devamını Oku
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Sayfalama -->
+    if (totalPages > 1)
+    {
+        <nav aria-label="Sayfa navigasyonu">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage - 1, categoryId = categoryId })">Önceki</a>
+                </li>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { page = i, categoryId = categoryId })">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage + 1, categoryId = categoryId })">Sonraki</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+else
+{
+    <div class="alert alert-warning text-center">
+        <i class="bi bi-info-circle me-2"></i>
+        Henüz blog yazısı bulunmamaktadır.
+    </div>
+}
+
+<style>
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+        }
+</style>

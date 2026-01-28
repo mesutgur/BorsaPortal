@@ -1,0 +1,624 @@
+@model BorsaPortal.Web.ViewModels.CreateValuationViewModel
+@{
+    ViewBag.Title = "Yeni Hisse Değerleme";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-calculator"></i> Kapsamlı Hisse Değerleme</h4>
+                    <small>Tüm değerleme yöntemleri otomatik hesaplanır</small>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle"></i> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    }
+
+                    @using (Html.BeginForm("Save", "Valuation", FormMethod.Post, new { id = "valuationForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                        <!-- Şirket Seçimi -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label"><strong>Şirket Seçin</strong> <span class="text-danger">*</span></label>
+                                @Html.DropDownList("CompanyId", Model.Companies, "-- Şirket Seçin --", new { @class = "form-select", id = "companySelect", required = "required" })
+                                @Html.ValidationMessageFor(m => m.CompanyId, "", new { @class = "text-danger" })
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><strong>@Html.DisplayNameFor(m => m.CurrentPrice)</strong> <span class="text-danger">*</span></label>
+                                @Html.TextBoxFor(m => m.CurrentPrice, new { @class = "form-control", type = "number", step = "0.01", required = "required" })
+                                @Html.ValidationMessageFor(m => m.CurrentPrice, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Not:</strong> Şirket seçimi yapıldığında mevcut finansal veriler otomatik olarak yüklenecektir.
+                            Eksik veriler için şirketin finansal bilgilerini Admin panelinden güncelleyebilir veya aşağıdaki alanlara manuel olarak girebilirsiniz.
+                            Finansal verilere <a href="https://www.kap.org.tr/tr/bist-sirketler" target="_blank" class="alert-link">KAP</a> üzerinden ulaşabilirsiniz.
+                        </div>
+
+                        <hr />
+
+                        <!-- Temel Bilgiler -->
+                        <h5 class="mb-3"><i class="bi bi-info-circle"></i> Temel Bilgiler</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.PaidInCapital)</label>
+                                @Html.TextBoxFor(m => m.PaidInCapital, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.Equity)</label>
+                                @Html.TextBoxFor(m => m.Equity, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.CurrentMarketValue)</label>
+                                @Html.TextBoxFor(m => m.CurrentMarketValue, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                        </div>
+
+                        <!-- Kar Bilgileri -->
+                        <h5 class="mb-3 mt-4"><i class="bi bi-cash-stack"></i> Kar Bilgileri</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.QuarterNetProfit)</label>
+                                @Html.TextBoxFor(m => m.QuarterNetProfit, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.YearlyNetProfit)</label>
+                                @Html.TextBoxFor(m => m.YearlyNetProfit, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.EstimatedYearlyNetProfit)</label>
+                                @Html.TextBoxFor(m => m.EstimatedYearlyNetProfit, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.YearlySales)</label>
+                                @Html.TextBoxFor(m => m.YearlySales, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                        </div>
+
+                        <!-- Oranlar -->
+                        <h5 class="mb-3 mt-4"><i class="bi bi-percent"></i> F/K ve PD/DD Oranları</h5>
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.StockPE)</label>
+                                @Html.TextBoxFor(m => m.StockPE, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.StockPB)</label>
+                                @Html.TextBoxFor(m => m.StockPB, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><strong>Değerleme Referansı</strong></label>
+                                <select id="valuationReferenceSelect" class="form-select">
+                                    <option value="">-- Seçiniz --</option>
+                                    <option value="sector">Sektör Ortalaması</option>
+                                    <option value="bist100">BIST100 Ortalaması</option>
+                                </select>
+                                <small class="text-muted">Seçtiğiniz referansa göre F/K ve PD/DD oranları otomatik doldurulur</small>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.SectorPE)</label>
+                                @Html.TextBoxFor(m => m.SectorPE, new { @class = "form-control", type = "number", step = "0.01", id = "sectorPEInput" })
+                                <small class="text-muted">Yukarıdan referans seçerek otomatik doldurun veya manuel girin</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.SectorPB)</label>
+                                @Html.TextBoxFor(m => m.SectorPB, new { @class = "form-control", type = "number", step = "0.01", id = "sectorPBInput" })
+                                <small class="text-muted">Yukarıdan referans seçerek otomatik doldurun veya manuel girin</small>
+                            </div>
+                        </div>
+
+                        <!-- Hidden fields to store sector and BIST100 data -->
+                        <input type="hidden" id="hiddenSectorPE" />
+                        <input type="hidden" id="hiddenSectorPB" />
+                        <input type="hidden" id="hiddenBist100PE" />
+                        <input type="hidden" id="hiddenBist100PB" />
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.CurrentPE)</label>
+                                @Html.TextBoxFor(m => m.CurrentPE, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">@Html.DisplayNameFor(m => m.EstimatedPE)</label>
+                                @Html.TextBoxFor(m => m.EstimatedPE, new { @class = "form-control", type = "number", step = "0.01" })
+                            </div>
+                        </div>
+
+                        <!-- Geçmiş Yıl Verileri - Collapse -->
+                        <div class="accordion mt-4" id="historicalDataAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#historicalData">
+                                        <i class="bi bi-calendar3"></i> &nbsp; Geçmiş Yıl Verileri (Opsiyonel)
+                                    </button>
+                                </h2>
+                                <div id="historicalData" class="accordion-collapse collapse" data-bs-parent="#historicalDataAccordion">
+                                    <div class="accordion-body">
+                                        <!-- Net Kar Geçmişi -->
+                                        <h6 class="mb-3">Net Kar Geçmişi</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label">@Model.GetYear1() Net Karı</label>
+                                                @Html.TextBoxFor(m => m.NetProfitYear1, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">@Model.GetYear2() Net Karı</label>
+                                                @Html.TextBoxFor(m => m.NetProfitYear2, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">@Model.GetYear3() Net Karı</label>
+                                                @Html.TextBoxFor(m => m.NetProfitYear3, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">@Model.GetYear4() Net Karı</label>
+                                                @Html.TextBoxFor(m => m.NetProfitYear4, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                        </div>
+
+                                        <!-- Özsermaye Geçmişi -->
+                                        <h6 class="mb-3 mt-4">Özsermaye Geçmişi</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-3">
+                                                <label class="form-label">@Model.GetYear1() Özsermaye</label>
+                                                @Html.TextBoxFor(m => m.EquityYear1, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">@Model.GetYear2() Özsermaye</label>
+                                                @Html.TextBoxFor(m => m.EquityYear2, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">@Model.GetYear3() Özsermaye</label>
+                                                @Html.TextBoxFor(m => m.EquityYear3, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">@Model.GetYear4() Özsermaye</label>
+                                                @Html.TextBoxFor(m => m.EquityYear4, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                        </div>
+
+                                        <!-- F/K Oranları Geçmişi -->
+                                        <h6 class="mb-3 mt-4">F/K Oranları Geçmişi</h6>
+                                        <div class="row mb-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label">@Model.GetHistoricalPEYear1() F/K Oranı</label>
+                                                @Html.TextBoxFor(m => m.PE_Year1, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">@Model.GetHistoricalPEYear2() F/K Oranı</label>
+                                                @Html.TextBoxFor(m => m.PE_Year2, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">@Model.GetHistoricalPEYear3() F/K Oranı</label>
+                                                @Html.TextBoxFor(m => m.PE_Year3, new { @class = "form-control", type = "number", step = "0.01" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notlar -->
+                        <div class="mb-3 mt-4">
+                            <label class="form-label">@Html.DisplayNameFor(m => m.Notes)</label>
+                            @Html.TextAreaFor(m => m.Notes, 3, 0, new { @class = "form-control", placeholder = "Değerleme hakkında notlarınızı buraya ekleyebilirsiniz..." })
+                        </div>
+
+                        <!-- Hidden fields for results -->
+                        @Html.HiddenFor(m => m.OverallAverageTargetPrice, new { id = "overallAverageTargetPriceInput" })
+                        @Html.HiddenFor(m => m.OverallAveragePremiumPotential, new { id = "overallAveragePremiumPotentialInput" })
+                        @Html.HiddenFor(m => m.EstimatedYearEndProfit, new { id = "estimatedYearEndProfitInput" })
+
+                        <!-- Butonlar -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> İptal
+                            </a>
+                            <div>
+                                <button type="button" id="calculateBtn" class="btn btn-info btn-lg me-2">
+                                    <i class="bi bi-calculator"></i> Tüm Yöntemleri Hesapla
+                                </button>
+                                <button type="submit" id="saveBtn" class="btn btn-success btn-lg" style="display:none;">
+                                    <i class="bi bi-save"></i> Kaydet
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Hesaplama Sonuçları -->
+                    <div id="calculationResults" style="display:none;" class="mt-5">
+                        <hr />
+                        <h4 class="text-center mb-4"><i class="bi bi-trophy"></i> Değerleme Sonuçları</h4>
+
+                        <!-- Genel Özet -->
+                        <div class="row mb-4" id="overallSummary">
+                            <!-- Dinamik olarak doldurulacak -->
+                        </div>
+
+                        <!-- Yöntem Bazlı Sonuçlar -->
+                        <div id="methodResultsContainer">
+                            <!-- Dinamik olarak doldurulacak -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    @Scripts.Render("~/bundles/jquery")
+    <script>
+        $(document).ready(function () {
+            // Değerleme referansı seçimi değiştiğinde
+            $('#valuationReferenceSelect').on('change', function () {
+                var selectedReference = $(this).val();
+
+                if (selectedReference === 'sector') {
+                    // Sektör ortalaması seçildi
+                    var sectorPE = $('#hiddenSectorPE').val();
+                    var sectorPB = $('#hiddenSectorPB').val();
+
+                    if (sectorPE) {
+                        $('#sectorPEInput').val(sectorPE);
+                    }
+                    if (sectorPB) {
+                        $('#sectorPBInput').val(sectorPB);
+                    }
+
+                    if (sectorPE || sectorPB) {
+                        showNotification('success', 'Sektör ortalaması değerleri başarıyla yüklendi!');
+                    } else {
+                        showNotification('warning', 'Sektör ortalaması verileri bulunamadı.');
+                    }
+                } else if (selectedReference === 'bist100') {
+                    // BIST100 ortalaması seçildi
+                    var bist100PE = $('#hiddenBist100PE').val();
+                    var bist100PB = $('#hiddenBist100PB').val();
+
+                    if (bist100PE) {
+                        $('#sectorPEInput').val(bist100PE);
+                    }
+                    if (bist100PB) {
+                        $('#sectorPBInput').val(bist100PB);
+                    }
+
+                    if (bist100PE || bist100PB) {
+                        showNotification('success', 'BIST100 ortalaması değerleri başarıyla yüklendi!');
+                    } else {
+                        showNotification('warning', 'BIST100 ortalaması verileri bulunamadı.');
+                    }
+                } else {
+                    // Hiçbir şey seçilmedi, alanları temizle
+                    $('#sectorPEInput').val('');
+                    $('#sectorPBInput').val('');
+                }
+            });
+
+            // Şirket seçimi değiştiğinde otomatik veri doldur
+            $('#companySelect').on('change', function () {
+                var companyId = $(this).val();
+                if (!companyId) {
+                    clearForm();
+                    $('#refreshDataBtn').hide();
+                    return;
+                }
+
+                // Yenile butonunu göster
+                $('#refreshDataBtn').show();
+                loadCompanyData(companyId);
+            });
+
+            // Verileri yenile butonu
+            $('#refreshDataBtn').on('click', function () {
+                var companyId = $('#companySelect').val();
+                if (companyId) {
+                    loadCompanyData(companyId, true);
+                }
+            });
+
+            function loadCompanyData(companyId, isRefresh) {
+                // Loading göster
+                var loadingText = isRefresh ? 'Finansal veriler yenileniyor...' : 'Şirket verileri yükleniyor...';
+                var $loadingMsg = $('<div class="alert alert-info mt-3" id="loadingMsg"><i class="bi bi-hourglass-split"></i> ' + loadingText + '</div>');
+                $('#companySelect').closest('.row').after($loadingMsg);
+
+                $.ajax({
+                    url: '@Url.Action("GetCompanyData", "Valuation")',
+                    type: 'GET',
+                    data: { companyId: companyId },
+                    success: function (response) {
+                        $('#loadingMsg').remove();
+
+                        if (response.success) {
+                            var filledCount = 0;
+
+                            // Form alanlarını otomatik doldur - null ve undefined kontrolü yap
+                            if (response.currentPrice != null && response.currentPrice !== undefined) {
+                                $('input[name="CurrentPrice"]').val(response.currentPrice.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.paidInCapital != null && response.paidInCapital !== undefined) {
+                                $('input[name="PaidInCapital"]').val(response.paidInCapital.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.equity != null && response.equity !== undefined) {
+                                $('input[name="Equity"]').val(response.equity.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.currentMarketValue != null && response.currentMarketValue !== undefined) {
+                                $('input[name="CurrentMarketValue"]').val(response.currentMarketValue.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.yearlyNetProfit != null && response.yearlyNetProfit !== undefined) {
+                                $('input[name="YearlyNetProfit"]').val(response.yearlyNetProfit.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.quarterlyNetProfit != null && response.quarterlyNetProfit !== undefined) {
+                                $('input[name="QuarterNetProfit"]').val(response.quarterlyNetProfit.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.yearlySales != null && response.yearlySales !== undefined) {
+                                $('input[name="YearlySales"]').val(response.yearlySales.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.stockPE != null && response.stockPE !== undefined) {
+                                $('input[name="StockPE"]').val(response.stockPE.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.stockPB != null && response.stockPB !== undefined) {
+                                $('input[name="StockPB"]').val(response.stockPB.toFixed(2));
+                                filledCount++;
+                            }
+                            // Sektör ve BIST100 verilerini hidden field'lara kaydet
+                            if (response.sectorPE != null && response.sectorPE !== undefined) {
+                                $('#hiddenSectorPE').val(response.sectorPE.toFixed(2));
+                            }
+                            if (response.sectorPB != null && response.sectorPB !== undefined) {
+                                $('#hiddenSectorPB').val(response.sectorPB.toFixed(2));
+                            }
+                            if (response.bist100PE != null && response.bist100PE !== undefined) {
+                                $('#hiddenBist100PE').val(response.bist100PE.toFixed(2));
+                            }
+                            if (response.bist100PB != null && response.bist100PB !== undefined) {
+                                $('#hiddenBist100PB').val(response.bist100PB.toFixed(2));
+                            }
+
+                            // Geçmiş yıl verileri
+                            if (response.netProfitYear1 != null && response.netProfitYear1 !== undefined) {
+                                $('input[name="NetProfitYear1"]').val(response.netProfitYear1.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.netProfitYear2 != null && response.netProfitYear2 !== undefined) {
+                                $('input[name="NetProfitYear2"]').val(response.netProfitYear2.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.netProfitYear3 != null && response.netProfitYear3 !== undefined) {
+                                $('input[name="NetProfitYear3"]').val(response.netProfitYear3.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.netProfitYear4 != null && response.netProfitYear4 !== undefined) {
+                                $('input[name="NetProfitYear4"]').val(response.netProfitYear4.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.equityYear1 != null && response.equityYear1 !== undefined) {
+                                $('input[name="EquityYear1"]').val(response.equityYear1.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.equityYear2 != null && response.equityYear2 !== undefined) {
+                                $('input[name="EquityYear2"]').val(response.equityYear2.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.equityYear3 != null && response.equityYear3 !== undefined) {
+                                $('input[name="EquityYear3"]').val(response.equityYear3.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.equityYear4 != null && response.equityYear4 !== undefined) {
+                                $('input[name="EquityYear4"]').val(response.equityYear4.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.peYear1 != null && response.peYear1 !== undefined) {
+                                $('input[name="PE_Year1"]').val(response.peYear1.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.peYear2 != null && response.peYear2 !== undefined) {
+                                $('input[name="PE_Year2"]').val(response.peYear2.toFixed(2));
+                                filledCount++;
+                            }
+                            if (response.peYear3 != null && response.peYear3 !== undefined) {
+                                $('input[name="PE_Year3"]').val(response.peYear3.toFixed(2));
+                                filledCount++;
+                            }
+
+                            // Başarı mesajı - doldurulmuş alan sayısı ile birlikte
+                            if (filledCount > 0) {
+                                var $successMsg = $('<div class="alert alert-success alert-dismissible fade show mt-3"><i class="bi bi-check-circle"></i> Şirket verileri otomatik olarak dolduruldu! (' + filledCount + ' alan dolduruldu) Eksik alanları manuel girebilirsiniz.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+                                $('#companySelect').closest('.row').after($successMsg);
+                                setTimeout(function() { $successMsg.fadeOut(); }, 5000);
+                            } else {
+                                var $warningMsg = $('<div class="alert alert-warning alert-dismissible fade show mt-3"><i class="bi bi-exclamation-triangle"></i> Şirket için finansal veri bulunamadı. Lütfen manuel olarak girin.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+                                $('#companySelect').closest('.row').after($warningMsg);
+                                setTimeout(function() { $warningMsg.fadeOut(); }, 5000);
+                            }
+                        } else {
+                            console.error('GetCompanyData Error:', response.message);
+                            var $errorMsg = $('<div class="alert alert-danger alert-dismissible fade show mt-3"><i class="bi bi-exclamation-triangle"></i> ' + response.message + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+                            $('#companySelect').closest('.row').after($errorMsg);
+                            setTimeout(function() { $errorMsg.fadeOut(); }, 5000);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        $('#loadingMsg').remove();
+                        console.error('AJAX Error:', status, error, xhr.responseText);
+                        var errorMessage = 'Veri yüklenirken hata oluştu.';
+                        if (xhr.status === 404) {
+                            errorMessage = 'Şirket verisi bulunamadı.';
+                        } else if (xhr.status === 500) {
+                            errorMessage = 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.';
+                        } else if (status === 'timeout') {
+                            errorMessage = 'İstek zaman aşımına uğradı. Lütfen tekrar deneyin.';
+                        }
+                        var $errorMsg = $('<div class="alert alert-danger alert-dismissible fade show mt-3"><i class="bi bi-exclamation-triangle"></i> ' + errorMessage + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>');
+                        $('#companySelect').closest('.row').after($errorMsg);
+                        setTimeout(function() { $errorMsg.fadeOut(); }, 5000);
+                    }
+                });
+            }
+
+            function clearForm() {
+                $('#valuationForm input[type="number"]').val('');
+                $('#calculationResults').hide();
+                $('#saveBtn').hide();
+                $('#valuationReferenceSelect').val('');
+                $('#hiddenSectorPE, #hiddenSectorPB, #hiddenBist100PE, #hiddenBist100PB').val('');
+            }
+
+            function showNotification(type, message) {
+                var alertClass = type === 'success' ? 'alert-success' : (type === 'warning' ? 'alert-warning' : 'alert-info');
+                var icon = type === 'success' ? 'check-circle' : (type === 'warning' ? 'exclamation-triangle' : 'info-circle');
+
+                var $notification = $('<div class="alert ' + alertClass + ' alert-dismissible fade show mt-3">' +
+                    '<i class="bi bi-' + icon + '"></i> ' + message +
+                    '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                    '</div>');
+
+                $('#valuationReferenceSelect').closest('.row').after($notification);
+                setTimeout(function() { $notification.fadeOut(); }, 3000);
+            }
+
+            // Hesaplama butonu
+            $('#calculateBtn').on('click', function () {
+                var formData = $('#valuationForm').serialize();
+                var $btn = $(this);
+                $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Hesaplanıyor...');
+
+                $.ajax({
+                    url: '@Url.Action("Calculate", "Valuation")',
+                    type: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        if (response.success) {
+                            displayResults(response);
+                            $('#saveBtn').show();
+                            $('#calculationResults').slideDown();
+
+                            // Hidden inputları güncelle
+                            $('#overallAverageTargetPriceInput').val(response.overallAverageTargetPrice);
+                            $('#overallAveragePremiumPotentialInput').val(response.overallAveragePremiumPotential);
+
+                            // Scroll to results
+                            $('html, body').animate({
+                                scrollTop: $("#calculationResults").offset().top - 100
+                            }, 500);
+                        } else {
+                            alert('Hata: ' + response.message);
+                        }
+                        $btn.prop('disabled', false).html('<i class="bi bi-calculator"></i> Tüm Yöntemleri Hesapla');
+                    },
+                    error: function () {
+                        alert('Hesaplama sırasında bir hata oluştu.');
+                        $btn.prop('disabled', false).html('<i class="bi bi-calculator"></i> Tüm Yöntemleri Hesapla');
+                    }
+                });
+            });
+
+            function displayResults(response) {
+                // Genel özet
+                var overallHtml = '<div class="col-md-4">' +
+                    '<div class="card bg-success text-white">' +
+                    '<div class="card-body text-center">' +
+                    '<h6 class="card-title">Genel Ortalama Hedef Fiyat</h6>' +
+                    '<h2 class="mb-0">₺' + formatNumber(response.overallAverageTargetPrice) + '</h2>' +
+                    '<small>' + response.successfulMethodsCount + ' yöntemin ortalaması</small>' +
+                    '</div></div></div>';
+
+                overallHtml += '<div class="col-md-4">' +
+                    '<div class="card bg-info text-white">' +
+                    '<div class="card-body text-center">' +
+                    '<h6 class="card-title">Prim Potansiyeli</h6>' +
+                    '<h2 class="mb-0">' + formatNumber(response.overallAveragePremiumPotential) + '%</h2>' +
+                    '<small>Ortalama kazanç potansiyeli</small>' +
+                    '</div></div></div>';
+
+                if (response.bonusSharePotential != null) {
+                    overallHtml += '<div class="col-md-4">' +
+                        '<div class="card bg-warning text-dark">' +
+                        '<div class="card-body text-center">' +
+                        '<h6 class="card-title">Bedelsiz Potansiyeli</h6>' +
+                        '<h2 class="mb-0">' + formatNumber(response.bonusSharePotential) + '%</h2>' +
+                        '<small>Özsermaye/Sermaye oranı</small>' +
+                        '</div></div></div>';
+                }
+
+                $('#overallSummary').html(overallHtml);
+
+                // Yöntem bazlı sonuçlar
+                var methodsHtml = '<div class="accordion" id="methodsAccordion">';
+
+                $.each(response.methodResults, function (index, method) {
+                    if (!method.success) return; // Başarısız yöntemleri atla
+
+                    var badgeClass = method.premiumPotential > 0 ? 'bg-success' : 'bg-danger';
+                    var accordionId = 'method' + index;
+
+                    methodsHtml += '<div class="accordion-item">' +
+                        '<h2 class="accordion-header">' +
+                        '<button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#' + accordionId + '">' +
+                        '<strong>' + method.methodName + '</strong>' +
+                        '<span class="badge ' + badgeClass + ' ms-3">₺' + formatNumber(method.targetPrice) + '</span>' +
+                        '<span class="badge bg-secondary ms-2">' + formatNumber(method.premiumPotential) + '%</span>' +
+                        '</button></h2>' +
+                        '<div id="' + accordionId + '" class="accordion-collapse collapse" data-bs-parent="#methodsAccordion">' +
+                        '<div class="accordion-body">';
+
+                    if (method.estimatedYearEndProfit != null) {
+                        methodsHtml += '<div class="alert alert-info">' +
+                            '<strong>Tahmini Yıl Sonu Karı:</strong> ₺' + formatNumber(method.estimatedYearEndProfit) +
+                            '</div>';
+                    }
+
+                    if (method.calculations && method.calculations.length > 0) {
+                        methodsHtml += '<table class="table table-sm table-bordered">' +
+                            '<thead class="table-light">' +
+                            '<tr><th>Hesaplama</th><th class="text-end">Fiyat</th><th>Formül</th></tr>' +
+                            '</thead><tbody>';
+
+                        $.each(method.calculations, function (i, calc) {
+                            methodsHtml += '<tr>' +
+                                '<td><strong>' + calc.calculationName + '</strong></td>' +
+                                '<td class="text-end">₺' + formatNumber(calc.calculatedPrice) + '</td>' +
+                                '<td><small>' + (calc.formulaWithValues || calc.formula) + '</small></td>' +
+                                '</tr>';
+                        });
+
+                        methodsHtml += '</tbody></table>';
+                    }
+
+                    methodsHtml += '</div></div></div>';
+                });
+
+                methodsHtml += '</div>';
+                $('#methodResultsContainer').html(methodsHtml);
+            }
+
+            function formatNumber(value) {
+                if (value == null) return '-';
+                return parseFloat(value).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+        });
+    </script>
+}

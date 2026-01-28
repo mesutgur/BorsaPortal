@@ -1,0 +1,145 @@
+@model BorsaPortal.Domain.Entities.RssFeedSource
+
+@{
+    ViewBag.Title = "RSS Feed Kaynağını Sil";
+}
+
+<h2><i class="bi bi-trash"></i> RSS Feed Kaynağını Sil</h2>
+
+<hr />
+
+<div class="alert alert-danger">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <strong>Uyarı!</strong> Bu RSS feed kaynağını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Kaynak Bilgileri</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Kaynak Adı</dt>
+            <dd class="col-sm-9">@Model.Name</dd>
+
+            <dt class="col-sm-3">Açıklama</dt>
+            <dd class="col-sm-9">
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    @Model.Description
+                }
+                else
+                {
+                    <span class="text-muted">-</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Feed URL</dt>
+            <dd class="col-sm-9">
+                <a href="@Model.FeedUrl" target="_blank">@Model.FeedUrl</a>
+            </dd>
+
+            <dt class="col-sm-3">Sektör</dt>
+            <dd class="col-sm-9">
+                @if (Model.Sector != null)
+                {
+                    <span class="badge bg-info">@Model.Sector.Name</span>
+                }
+                else
+                {
+                    <span class="text-muted">Belirtilmemiş</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Durum</dt>
+            <dd class="col-sm-9">
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success">Aktif</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Pasif</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Çekilme Aralığı</dt>
+            <dd class="col-sm-9">@Model.FetchIntervalMinutes dakika</dd>
+
+            <dt class="col-sm-3">Son Çekilme Zamanı</dt>
+            <dd class="col-sm-9">
+                @if (Model.LastFetchedAt.HasValue)
+                {
+                    @Model.LastFetchedAt.Value.ToString("dd MMMM yyyy, HH:mm")
+                }
+                else
+                {
+                    <span class="text-muted">Henüz çekilmedi</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Toplam Çekilen Haber</dt>
+            <dd class="col-sm-9">
+                <span class="badge bg-primary">@Model.ItemsFetchedCount</span> haber
+            </dd>
+
+            @if (!string.IsNullOrEmpty(Model.IncludeKeywords))
+            {
+                <dt class="col-sm-3">İçeren Kelimeler</dt>
+                <dd class="col-sm-9">
+                    @foreach (var keyword in Model.IncludeKeywords.Split(','))
+                    {
+                        <span class="badge bg-success me-1">@keyword.Trim()</span>
+                    }
+                </dd>
+            }
+
+            @if (!string.IsNullOrEmpty(Model.ExcludeKeywords))
+            {
+                <dt class="col-sm-3">İçermeyen Kelimeler</dt>
+                <dd class="col-sm-9">
+                    @foreach (var keyword in Model.ExcludeKeywords.Split(','))
+                    {
+                        <span class="badge bg-danger me-1">@keyword.Trim()</span>
+                    }
+                </dd>
+            }
+
+            <dt class="col-sm-3">Otomatik Yayınla</dt>
+            <dd class="col-sm-9">
+                @if (Model.AutoPublish)
+                {
+                    <span><i class="bi bi-check-circle-fill text-success"></i> Evet</span>
+                }
+                else
+                {
+                    <span><i class="bi bi-x-circle-fill text-danger"></i> Hayır</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Oluşturulma Tarihi</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd MMMM yyyy, HH:mm")</dd>
+        </dl>
+    </div>
+</div>
+
+<div class="mt-3">
+    @using (Html.BeginForm("Delete", "RssFeedSource", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.Hidden("id", Model.Id)
+
+        <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Evet, Sil
+        </button>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="bi bi-x-circle"></i> İptal
+        </a>
+    }
+</div>
+
+<div class="alert alert-info mt-3">
+    <i class="bi bi-info-circle"></i>
+    <strong>Not:</strong> RSS kaynağını silmek, daha önce bu kaynaktan çekilen haberleri silmez.
+    Sadece bu kaynaktan yeni haber çekilmesi durur.
+</div>

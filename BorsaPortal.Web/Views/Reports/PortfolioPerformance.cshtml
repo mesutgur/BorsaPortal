@@ -1,0 +1,324 @@
+@using BorsaPortal.Application.Services
+@using BorsaPortal.Domain.Entities
+@{
+    ViewBag.Title = "Portföy Performans Raporu";
+    var portfolioSummary = ViewBag.PortfolioSummary as PortfolioSummary;
+    var transactions = ViewBag.Transactions as List<PortfolioItem>;
+    var sectorDistribution = ViewBag.SectorDistribution as dynamic;
+    var startDate = ViewBag.StartDate as string;
+    var endDate = ViewBag.EndDate as string;
+    var totalInvested = (decimal)ViewBag.TotalInvested;
+    var totalCurrentValue = (decimal)ViewBag.TotalCurrentValue;
+    var totalProfitLoss = (decimal)ViewBag.TotalProfitLoss;
+    var profitLossPercentage = (decimal)ViewBag.ProfitLossPercentage;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-graph-up"></i> Portföy Performans Raporu</h2>
+                <p class="text-muted">Detaylı performans analizi ve sektör dağılımı</p>
+            </div>
+            <div>
+                <a href="@Url.Action("Index", "Reports")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Geri
+                </a>
+                <button onclick="window.print()" class="btn btn-primary">
+                    <i class="bi bi-printer"></i> Yazdır
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Date Range Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        @using (Html.BeginForm("PortfolioPerformance", "Reports", FormMethod.Get, new { @class = "row g-3 align-items-end" }))
+        {
+            <div class="col-md-5">
+                <label class="form-label">Başlangıç Tarihi</label>
+                <input type="date" name="startDate" class="form-control" value="@startDate" />
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">Bitiş Tarihi</label>
+                <input type="date" name="endDate" class="form-control" value="@endDate" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-filter"></i> Filtrele
+                </button>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Performance Summary Cards -->
+<div class="row mb-4 g-3">
+    <div class="col-6 col-lg-3">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <h6 class="text-muted text-uppercase small mb-2">Dönem Yatırımı</h6>
+                <h3 class="mb-0 text-primary">₺@totalInvested.ToString("N2")</h3>
+                <small class="text-muted">@transactions.Count işlem</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-info">
+            <div class="card-body text-center">
+                <h6 class="text-muted text-uppercase small mb-2">Güncel Değer</h6>
+                <h3 class="mb-0 text-info">₺@totalCurrentValue.ToString("N2")</h3>
+                <small class="text-muted">toplam değer</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-@(totalProfitLoss >= 0 ? "success" : "danger")">
+            <div class="card-body text-center">
+                <h6 class="text-muted text-uppercase small mb-2">Kar/Zarar</h6>
+                <h3 class="mb-0 text-@(totalProfitLoss >= 0 ? "success" : "danger")">
+                    @(totalProfitLoss >= 0 ? "+" : "")₺@totalProfitLoss.ToString("N2")
+                </h3>
+                <small class="text-muted">net kazanç</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card border-@(profitLossPercentage >= 0 ? "success" : "danger")">
+            <div class="card-body text-center">
+                <h6 class="text-muted text-uppercase small mb-2">Getiri Oranı</h6>
+                <h3 class="mb-0 text-@(profitLossPercentage >= 0 ? "success" : "danger")">
+                    @(profitLossPercentage >= 0 ? "+" : "")@profitLossPercentage.ToString("N2")%
+                </h3>
+                <small class="text-muted">yüzdesel getiri</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-pie-chart"></i> Sektör Dağılımı</h5>
+            </div>
+            <div class="card-body">
+                @if (sectorDistribution != null && ((IEnumerable<dynamic>)sectorDistribution).Any())
+                {
+                    <canvas id="sectorChart" height="250"></canvas>
+                }
+                else
+                {
+                    <p class="text-center text-muted py-5">Sektör dağılımı verisi yok</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Sektör Bazında Değer</h5>
+            </div>
+            <div class="card-body">
+                @if (sectorDistribution != null && ((IEnumerable<dynamic>)sectorDistribution).Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Sektör</th>
+                                    <th class="text-end">Değer</th>
+                                    <th class="text-end">Oran</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var sector in sectorDistribution)
+                                {
+                                    <tr>
+                                        <td>@sector.Sector</td>
+                                        <td class="text-end">₺@sector.TotalValue.ToString("N2")</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">@sector.Percentage.ToString("N1")%</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-center text-muted py-5">Sektör dağılımı verisi yok</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overall Portfolio Summary -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-briefcase"></i> Tüm Portföy Özeti</h5>
+    </div>
+    <div class="card-body">
+        <div class="row text-center g-3">
+            <div class="col-md-2">
+                <h6 class="text-muted small">Toplam Şirket</h6>
+                <h4 class="mb-0">@(portfolioSummary?.TotalCompanies ?? 0)</h4>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-muted small">Toplam Hisse</h6>
+                <h4 class="mb-0">@(portfolioSummary?.TotalShares.ToString("N0") ?? "0")</h4>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-muted small">Portföy Değeri</h6>
+                <h4 class="mb-0">₺@(portfolioSummary?.TotalValue.ToString("N2") ?? "0")</h4>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-muted small">Toplam Maliyet</h6>
+                <h4 class="mb-0">₺@(portfolioSummary?.TotalCost.ToString("N2") ?? "0")</h4>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-muted small">Toplam K/Z</h6>
+                <h4 class="mb-0 text-@(portfolioSummary?.TotalProfitLoss >= 0 ? "success" : "danger")">
+                    ₺@(portfolioSummary?.TotalProfitLoss.ToString("N2") ?? "0")
+                </h4>
+            </div>
+            <div class="col-md-2">
+                <h6 class="text-muted small">Getiri %</h6>
+                <h4 class="mb-0 text-@(portfolioSummary?.TotalProfitLossPercentage >= 0 ? "success" : "danger")">
+                    @(portfolioSummary?.TotalProfitLossPercentage.ToString("N2") ?? "0")%
+                </h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Transactions Table -->
+@if (transactions != null && transactions.Any())
+{
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-list-ul"></i> Dönem İçi İşlemler (@transactions.Count)</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Şirket</th>
+                            <th>Sektör</th>
+                            <th class="text-end">Adet</th>
+                            <th class="text-end">Alış Fiyatı</th>
+                            <th class="text-end">Maliyet</th>
+                            <th class="text-end">Güncel Fiyat</th>
+                            <th class="text-end">Güncel Değer</th>
+                            <th class="text-end">K/Z</th>
+                            <th class="text-end">K/Z %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var transaction in transactions)
+                        {
+                            <tr>
+                                <td>@transaction.BuyDate.ToString("dd.MM.yyyy")</td>
+                                <td>
+                                    <strong>@transaction.Company.Code</strong><br />
+                                    <small class="text-muted">@transaction.Company.Name</small>
+                                </td>
+                                <td><span class="badge bg-secondary">@(transaction.Company.Sector?.Name ?? "N/A")</span></td>
+                                <td class="text-end">@transaction.Quantity.ToString("N2")</td>
+                                <td class="text-end">₺@transaction.AverageBuyPrice.ToString("N2")</td>
+                                <td class="text-end">₺@transaction.TotalCost.ToString("N2")</td>
+                                <td class="text-end">₺@transaction.CurrentPrice.ToString("N2")</td>
+                                <td class="text-end">₺@transaction.CurrentValue.ToString("N2")</td>
+                                <td class="text-end">
+                                    <span class="@(transaction.ProfitLoss >= 0 ? "text-success" : "text-danger")">
+                                        @(transaction.ProfitLoss >= 0 ? "+" : "")₺@transaction.ProfitLoss.ToString("N2")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge @(transaction.ProfitLossPercentage >= 0 ? "bg-success" : "bg-danger")">
+                                        @(transaction.ProfitLossPercentage >= 0 ? "+" : "")@transaction.ProfitLossPercentage.ToString("N2")%
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="fw-bold">
+                        <tr>
+                            <td colspan="5" class="text-end">TOPLAM:</td>
+                            <td class="text-end">₺@totalInvested.ToString("N2")</td>
+                            <td colspan="1"></td>
+                            <td class="text-end">₺@totalCurrentValue.ToString("N2")</td>
+                            <td class="text-end text-@(totalProfitLoss >= 0 ? "success" : "danger")">
+                                @(totalProfitLoss >= 0 ? "+" : "")₺@totalProfitLoss.ToString("N2")
+                            </td>
+                            <td class="text-end">
+                                <span class="badge @(profitLossPercentage >= 0 ? "bg-success" : "bg-danger")">
+                                    @(profitLossPercentage >= 0 ? "+" : "")@profitLossPercentage.ToString("N2")%
+                                </span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (sectorDistribution != null && ((IEnumerable<dynamic>)sectorDistribution).Any())
+    {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Sector Distribution Pie Chart
+            var sectorCtx = document.getElementById('sectorChart').getContext('2d');
+            var sectorChart = new Chart(sectorCtx, {
+                type: 'pie',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", ((IEnumerable<dynamic>)sectorDistribution).Select(s => $"'{s.Sector}'")))],
+                    datasets: [{
+                        data: [@Html.Raw(string.Join(",", ((IEnumerable<dynamic>)sectorDistribution).Select(s => s.Percentage.ToString("F2").Replace(",", "."))))],
+                        backgroundColor: [
+                            '#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545',
+                            '#fd7e14', '#ffc107', '#198754', '#20c997', '#0dcaf0',
+                            '#adb5bd', '#6c757d', '#495057', '#343a40', '#212529'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': %' + context.parsed.toFixed(2);
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    }
+}
+
+@section Styles {
+    <style>
+        @@media print {
+            .btn, .card-header.bg-primary, .card-header.bg-success, .card-header.bg-info {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+}

@@ -1,0 +1,317 @@
+@model IEnumerable<BorsaPortal.Domain.Entities.Company>
+
+@{
+    ViewBag.Title = "Şirketler";
+    var sectors = ViewBag.Sectors as List<BorsaPortal.Domain.Entities.Sector>;
+    var currentPage = (int)ViewBag.CurrentPage;
+    var totalPages = (int)ViewBag.TotalPages;
+    var totalCount = (int)ViewBag.TotalCount;
+    var search = ViewBag.Search as string;
+    var sectorId = ViewBag.SectorId as int?;
+    var sortBy = ViewBag.SortBy as string;
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-2">
+                <i class="bi bi-building"></i> Şirketler
+            </h1>
+            <p class="text-muted">BIST'te işlem gören tüm şirketler</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <form method="get" action="@Url.Action("Index")" id="filterForm">
+                <div class="row g-3">
+                    <!-- Search -->
+                    <div class="col-md-4">
+                        <label for="search" class="form-label">
+                            <i class="bi bi-search"></i> Ara
+                        </label>
+                        <input type="text" class="form-control" id="search" name="search"
+                               value="@search" placeholder="Şirket kodu veya adı...">
+                    </div>
+
+                    <!-- Sector Filter -->
+                    <div class="col-md-3">
+                        <label for="sectorId" class="form-label">
+                            <i class="bi bi-diagram-3"></i> Sektör
+                        </label>
+                        <select class="form-select" id="sectorId" name="sectorId">
+                            <option value="">Tüm Sektörler</option>
+                            @if (sectors != null)
+                            {
+                                foreach (var sector in sectors)
+                                {
+                                    <option value="@sector.Id" @(sectorId == sector.Id ? "selected" : "")>
+                                        @sector.Name
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Sort By -->
+                    <div class="col-md-3">
+                        <label for="sortBy" class="form-label">
+                            <i class="bi bi-sort-down"></i> Sırala
+                        </label>
+                        <select class="form-select" id="sortBy" name="sortBy">
+                            <option value="code" @(sortBy == "code" ? "selected" : "")>Koda Göre</option>
+                            <option value="name" @(sortBy == "name" ? "selected" : "")>İsme Göre</option>
+                            <option value="sector" @(sortBy == "sector" ? "selected" : "")>Sektöre Göre</option>
+                        </select>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100 me-2">
+                            <i class="bi bi-funnel"></i> Filtrele
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Summary -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <p class="text-muted mb-0">
+                    <strong>@totalCount</strong> şirket bulundu
+                    @if (!string.IsNullOrEmpty(search) || sectorId.HasValue)
+                    {
+                        <span>
+                            (filtrelenmiş)
+                            <a href="@Url.Action("Index")" class="text-primary ms-2">
+                                <i class="bi bi-x-circle"></i> Filtreyi Temizle
+                            </a>
+                        </span>
+                    }
+                </p>
+                <p class="text-muted mb-0">
+                    Sayfa @currentPage / @totalPages
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Companies Grid -->
+    <div class="row">
+        @if (Model != null && Model.Any())
+        {
+            foreach (var company in Model)
+            {
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm company-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h5 class="card-title mb-1">
+                                        <strong>@company.Code</strong>
+                                    </h5>
+                                    <p class="card-text text-muted small mb-0">@company.Name</p>
+                                </div>
+                                @if (!string.IsNullOrEmpty(company.LogoUrl))
+                                {
+                                    <img src="@company.LogoUrl" alt="@company.Code"
+                                         class="company-logo" style="width: 40px; height: 40px; object-fit: contain;">
+                                }
+                            </div>
+
+                            @if (company.Sector != null)
+                            {
+                                <div class="mb-2">
+                                    <span class="badge bg-secondary">
+                                        <i class="bi bi-diagram-3"></i> @company.Sector.Name
+                                    </span>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(company.Description))
+                            {
+                                <p class="card-text small text-muted" style="height: 60px; overflow: hidden;">
+                                    @(company.Description.Length > 100 ? company.Description.Substring(0, 100) + "..." : company.Description)
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="card-text small text-muted" style="height: 60px;">
+                                    Açıklama bulunmuyor.
+                                </p>
+                            }
+
+                            <div class="d-grid gap-2">
+                                <a href="@Url.Action("Details", new { id = company.Id })" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-graph-up"></i> Detayları Gör
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    @if (!string.IsNullOrEmpty(company.Website))
+                                    {
+                                        <a href="@company.Website" target="_blank" class="text-decoration-none">
+                                            <i class="bi bi-globe"></i> Web
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">
+                                            <i class="bi bi-globe"></i> Web
+                                        </span>
+                                    }
+                                </small>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> ID: @company.Id
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <div class="alert alert-info text-center py-5">
+                    <i class="bi bi-inbox fs-1"></i>
+                    <h4 class="mt-3">Şirket bulunamadı</h4>
+                    <p class="text-muted">Arama kriterlerinize uygun şirket bulunmuyor.</p>
+                    <a href="@Url.Action("Index")" class="btn btn-primary mt-2">
+                        <i class="bi bi-arrow-counterclockwise"></i> Tüm Şirketleri Göster
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages > 1)
+    {
+        <div class="row mt-4">
+            <div class="col-12">
+                <nav aria-label="Sayfa navigasyonu">
+                    <ul class="pagination justify-content-center">
+                        <!-- First Page -->
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="@GetPageUrl(1)">
+                                <i class="bi bi-chevron-double-left"></i>
+                            </a>
+                        </li>
+
+                        <!-- Previous Page -->
+                        <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                            <a class="page-link" href="@GetPageUrl(currentPage - 1)">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+
+                        <!-- Page Numbers -->
+                        @{
+                            int startPage = Math.Max(1, currentPage - 2);
+                            int endPage = Math.Min(totalPages, currentPage + 2);
+
+                            for (int i = startPage; i <= endPage; i++)
+                            {
+                                <li class="page-item @(i == currentPage ? "active" : "")">
+                                    <a class="page-link" href="@GetPageUrl(i)">@i</a>
+                                </li>
+                            }
+                        }
+
+                        <!-- Next Page -->
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" href="@GetPageUrl(currentPage + 1)">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+
+                        <!-- Last Page -->
+                        <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                            <a class="page-link" href="@GetPageUrl(totalPages)">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    }
+</div>
+
+@functions {
+    string GetPageUrl(int page)
+    {
+        var routeValues = new System.Web.Routing.RouteValueDictionary();
+        routeValues.Add("page", page);
+
+        var searchValue = ViewBag.Search as string;
+        if (!string.IsNullOrEmpty(searchValue))
+            routeValues.Add("search", searchValue);
+
+        var sectorIdValue = ViewBag.SectorId as int?;
+        if (sectorIdValue.HasValue)
+            routeValues.Add("sectorId", sectorIdValue.Value);
+
+        var sortByValue = ViewBag.SortBy as string;
+        if (!string.IsNullOrEmpty(sortByValue))
+            routeValues.Add("sortBy", sortByValue);
+
+        return Url.Action("Index", routeValues);
+    }
+}
+
+@section Styles {
+    <style>
+        .company-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .company-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+        }
+
+        .company-logo {
+            border-radius: 8px;
+            padding: 5px;
+            background: #f8f9fa;
+        }
+
+        .card-footer {
+            padding: 0.5rem 1rem;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        // Auto-submit form on filter change
+        document.getElementById('sectorId').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+
+        document.getElementById('sortBy').addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+
+        // Search on Enter key
+        document.getElementById('search').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('filterForm').submit();
+            }
+        });
+    </script>
+}

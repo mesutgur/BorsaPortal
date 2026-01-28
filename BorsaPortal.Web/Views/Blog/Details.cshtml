@@ -1,0 +1,291 @@
+@model BorsaPortal.Domain.Entities.BlogPost
+@using BorsaPortal.Domain.Entities
+
+@{
+    ViewBag.Title = Model.SeoTitle ?? Model.Title;
+    var relatedPosts = ViewBag.RelatedPosts as List<BlogPost> ?? new List<BlogPost>();
+}
+
+@if (!string.IsNullOrEmpty(Model.SeoDescription))
+{
+    <meta name="description" content="@Model.SeoDescription" />
+}
+@if (!string.IsNullOrEmpty(Model.SeoKeywords))
+{
+    <meta name="keywords" content="@Model.SeoKeywords" />
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Blog Yazısı -->
+        <article class="mb-4">
+            <!-- Başlık -->
+            <h1 class="mb-3">@Model.Title</h1>
+
+            <!-- Meta Bilgiler -->
+            <div class="d-flex flex-wrap gap-3 mb-4 text-muted">
+                @if (Model.Category != null)
+                {
+                    <span class="badge bg-primary">@Model.Category.Name</span>
+                }
+                <span>
+                    <i class="bi bi-calendar3"></i>
+                    @if (Model.PublishedAt.HasValue)
+                    {
+                        @Model.PublishedAt.Value.ToString("dd MMMM yyyy, HH:mm")
+                    }
+                    else
+                    {
+                        @Model.CreatedAt.ToString("dd MMMM yyyy, HH:mm")
+                    }
+                </span>
+                <span>
+                    <i class="bi bi-eye"></i>
+                    @Model.ViewCount görüntülenme
+                </span>
+                @if (Model.Author != null)
+                {
+                    <span>
+                        <i class="bi bi-person"></i>
+                        @Model.Author.Email
+                    </span>
+                }
+            </div>
+
+            <!-- Öne Çıkan Görsel -->
+            @if (!string.IsNullOrEmpty(Model.FeaturedImageUrl))
+            {
+                <div class="mb-4">
+                    <img src="@Model.FeaturedImageUrl" alt="@Model.Title" class="img-fluid rounded shadow">
+                </div>
+            }
+
+            <!-- Özet -->
+            @if (!string.IsNullOrEmpty(Model.Summary))
+            {
+                <div class="lead mb-4 p-3 bg-light rounded">
+                    @Model.Summary
+                </div>
+            }
+
+            <!-- İçerik -->
+            <div class="blog-content mb-4">
+                @Html.Raw(Model.Body?.Replace("\n", "<br/>"))
+            </div>
+
+            <!-- Paylaşım ve Favori Butonları -->
+            <div class="d-flex gap-2 mb-4 flex-wrap">
+                @if (Request.IsAuthenticated)
+                {
+                    <button type="button"
+                            class="btn btn-outline-warning btn-sm add-to-favorites"
+                            data-entity-type="BlogPost"
+                            data-entity-id="@Model.Id">
+                        <i class="bi bi-star"></i> Favorilere Ekle
+                    </button>
+                }
+                <a href="https://twitter.com/intent/tweet?text=@Uri.EscapeDataString(Model.Title)&url=@Uri.EscapeDataString(Request.Url.AbsoluteUri)"
+                   target="_blank"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-twitter"></i> Twitter'da Paylaş
+                </a>
+                <a href="https://www.facebook.com/sharer/sharer.php?u=@Uri.EscapeDataString(Request.Url.AbsoluteUri)"
+                   target="_blank"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-facebook"></i> Facebook'ta Paylaş
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url=@Uri.EscapeDataString(Request.Url.AbsoluteUri)"
+                   target="_blank"
+                   class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-linkedin"></i> LinkedIn'de Paylaş
+                </a>
+            </div>
+
+            <!-- Geri Dön -->
+            <div class="mt-4">
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Tüm Blog Yazılarına Dön
+                </a>
+            </div>
+        </article>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <!-- Kategori Bilgisi -->
+        @if (Model.Category != null)
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Kategori</h5>
+                </div>
+                <div class="card-body">
+                    <h6>@Model.Category.Name</h6>
+                    @if (!string.IsNullOrEmpty(Model.Category.Description))
+                    {
+                        <p class="mb-0 small text-muted">@Model.Category.Description</p>
+                    }
+                    <a href="@Url.Action("Index", new { categoryId = Model.Category.Id })" class="btn btn-sm btn-primary mt-2">
+                        Bu Kategorideki Diğer Yazılar
+                    </a>
+                </div>
+            </div>
+        }
+
+        <!-- İlgili Yazılar -->
+        @if (relatedPosts.Any())
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">İlgili Yazılar</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    @foreach (var post in relatedPosts)
+                    {
+                        <a href="@Url.Action("Details", new { slug = post.Slug })" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">@post.Title</h6>
+                            </div>
+                            @if (!string.IsNullOrEmpty(post.Summary))
+                            {
+                                <p class="mb-1 small text-muted">
+                                    @(post.Summary.Length > 80 ? post.Summary.Substring(0, 80) + "..." : post.Summary)
+                                </p>
+                            }
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3"></i>
+                                @if (post.PublishedAt.HasValue)
+                                {
+                                    @post.PublishedAt.Value.ToString("dd MMM yyyy")
+                                }
+                                else
+                                {
+                                    @post.CreatedAt.ToString("dd MMM yyyy")
+                                }
+                            </small>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Yazar Bilgisi -->
+        @if (Model.Author != null)
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Yazar</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">
+                        <i class="bi bi-person-circle"></i>
+                        @Model.Author.Email
+                    </p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .blog-content {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #333;
+    }
+
+        .blog-content p {
+            margin-bottom: 1rem;
+        }
+
+        .blog-content h2,
+        .blog-content h3,
+        .blog-content h4 {
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .blog-content img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .blog-content ul,
+        .blog-content ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+</style>
+
+@section Scripts {
+    <script>
+        $(function () {
+            // Favori ekleme/çıkarma
+            $('.add-to-favorites').on('click', function () {
+                var btn = $(this);
+                var entityType = btn.data('entity-type');
+                var entityId = btn.data('entity-id');
+                var isFavorited = btn.hasClass('favorited');
+
+                var url = isFavorited ? '@Url.Action("Remove", "Favorites")' : '@Url.Action("Add", "Favorites")';
+
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: {
+                        entityType: entityType,
+                        entityId: entityId
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            if (isFavorited) {
+                                btn.removeClass('favorited btn-warning').addClass('btn-outline-warning');
+                                btn.html('<i class="bi bi-star"></i> Favorilere Ekle');
+                            } else {
+                                btn.addClass('favorited btn-warning').removeClass('btn-outline-warning');
+                                btn.html('<i class="bi bi-star-fill"></i> Favorilerden Çıkar');
+                            }
+                            // Bildirim göster
+                            var alertType = isFavorited ? 'info' : 'success';
+                            var message = $('<div class="alert alert-' + alertType + ' alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 9999;" role="alert">' +
+                                '<i class="bi bi-check-circle"></i> ' + response.message +
+                                '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>' +
+                                '</div>');
+                            $('body').append(message);
+                            setTimeout(function () {
+                                message.alert('close');
+                            }, 3000);
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+                    }
+                });
+            });
+
+            // Sayfa yüklendiğinde favori durumunu kontrol et
+            var btn = $('.add-to-favorites');
+            if (btn.length > 0) {
+                var entityType = btn.data('entity-type');
+                var entityId = btn.data('entity-id');
+
+                $.ajax({
+                    url: '@Url.Action("IsFavorite", "Favorites")',
+                    type: 'GET',
+                    data: {
+                        entityType: entityType,
+                        entityId: entityId
+                    },
+                    success: function (response) {
+                        if (response.isFavorite) {
+                            btn.addClass('favorited btn-warning').removeClass('btn-outline-warning');
+                            btn.html('<i class="bi bi-star-fill"></i> Favorilerden Çıkar');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

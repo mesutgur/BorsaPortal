@@ -1,0 +1,111 @@
+@model BorsaPortal.Domain.Entities.BlogPost
+
+@{
+    ViewBag.Title = "Blog Yazısı Sil";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Blog Yazısı Sil</h2>
+    <a href="@Url.Action("Index")" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Geri Dön
+    </a>
+</div>
+
+<div class="alert alert-danger">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <strong>Uyarı!</strong> Bu blog yazısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+</div>
+
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">Silinecek Blog Yazısı</h5>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Başlık</dt>
+            <dd class="col-sm-9">@Model.Title</dd>
+
+            <dt class="col-sm-3">Slug</dt>
+            <dd class="col-sm-9">@Model.Slug</dd>
+
+            <dt class="col-sm-3">Kategori</dt>
+            <dd class="col-sm-9">
+                @if (Model.Category != null)
+                {
+                    @Model.Category.Name
+                }
+                else
+                {
+                    <span class="text-muted">-</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Durum</dt>
+            <dd class="col-sm-9">
+                @switch (Model.Status)
+                {
+                    case BorsaPortal.Domain.Enums.PublishStatus.Published:
+                        <span class="badge bg-success">Yayında</span>
+                        break;
+                    case BorsaPortal.Domain.Enums.PublishStatus.Draft:
+                        <span class="badge bg-warning text-dark">Taslak</span>
+                        break;
+                    case BorsaPortal.Domain.Enums.PublishStatus.Archived:
+                        <span class="badge bg-secondary">Arşivlendi</span>
+                        break;
+                }
+            </dd>
+
+            <dt class="col-sm-3">Özet</dt>
+            <dd class="col-sm-9">
+                @if (!string.IsNullOrEmpty(Model.Summary))
+                {
+                    @Model.Summary
+                }
+                else
+                {
+                    <span class="text-muted">-</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Yayın Tarihi</dt>
+            <dd class="col-sm-9">
+                @if (Model.PublishedAt.HasValue)
+                {
+                    @Model.PublishedAt.Value.ToString("dd.MM.yyyy HH:mm")
+                }
+                else
+                {
+                    <span class="text-muted">Henüz yayınlanmadı</span>
+                }
+            </dd>
+
+            <dt class="col-sm-3">Oluşturulma</dt>
+            <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+
+            <dt class="col-sm-3">İstatistikler</dt>
+            <dd class="col-sm-9">
+                <i class="bi bi-eye"></i> @Model.ViewCount görüntülenme
+                <br />
+                <i class="bi bi-chat"></i> @Model.CommentCount yorum
+            </dd>
+        </dl>
+    </div>
+</div>
+
+<div class="mt-4">
+    @using (Html.BeginForm("Delete", "BlogPost", FormMethod.Post))
+    {
+        @Html.AntiForgeryToken()
+        @Html.Hidden("id", Model.Id)
+
+        <div class="d-flex gap-2">
+            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                <i class="bi bi-x-circle"></i> İptal
+            </a>
+            <button type="submit" class="btn btn-danger">
+                <i class="bi bi-trash"></i> Evet, Sil
+            </button>
+        </div>
+    }
+</div>

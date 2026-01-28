@@ -1,0 +1,144 @@
+@model List<BorsaPortal.Web.Controllers.SectorStatViewModel>
+
+@{
+    ViewBag.Title = "Sektörler";
+}
+
+<div class="container-fluid">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-2">
+                        <i class="bi bi-diagram-3"></i> Sektörler
+                    </h1>
+                    <p class="text-muted">BIST sektör sınıflandırması</p>
+                </div>
+                <div>
+                    <a href="@Url.Action("Analysis")" class="btn btn-primary">
+                        <i class="bi bi-graph-up-arrow"></i> Sektörel Analiz
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model != null && Model.Any())
+    {
+        <!-- Summary -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card shadow-sm border-start border-primary border-3">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Toplam Sektör</h6>
+                        <h3 class="mb-0">@Model.Count</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-start border-success border-3">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Toplam Şirket</h6>
+                        <h3 class="mb-0">@Model.Sum(s => s.CompanyCount)</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card shadow-sm border-start border-info border-3">
+                    <div class="card-body">
+                        <h6 class="text-muted mb-2">Ortalama Şirket/Sektör</h6>
+                        <h3 class="mb-0">@((int)Model.Average(s => s.CompanyCount))</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sectors Grid -->
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm sector-card">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="sector-icon me-3">
+                                    <i class="bi bi-diagram-3 text-primary fs-2"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h5 class="card-title mb-1">@item.Sector.Name</h5>
+                                    @if (!string.IsNullOrEmpty(item.Sector.Code))
+                                    {
+                                        <p class="text-muted small mb-0">Kod: @item.Sector.Code</p>
+                                    }
+                                </div>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(item.Sector.Description))
+                            {
+                                <p class="card-text text-muted small" style="height: 60px; overflow: hidden;">
+                                    @(item.Sector.Description.Length > 100 ? item.Sector.Description.Substring(0, 100) + "..." : item.Sector.Description)
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="card-text text-muted small" style="height: 60px;">
+                                    Açıklama bulunmuyor.
+                                </p>
+                            }
+
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div>
+                                    <small class="text-muted">Şirket Sayısı</small>
+                                    <h4 class="mb-0 text-primary">@item.CompanyCount</h4>
+                                </div>
+                                <div class="text-end">
+                                    <i class="bi bi-building fs-1 text-muted opacity-25"></i>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <a href="@Url.Action("Details", new { id = item.Sector.Id })"
+                                   class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye"></i> Şirketleri Görüntüle
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center py-5">
+            <i class="bi bi-inbox fs-1"></i>
+            <h4 class="mt-3">Sektör bulunamadı</h4>
+            <p class="text-muted">Henüz sistemde kayıtlı sektör bulunmuyor.</p>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .sector-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .sector-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+        }
+
+        .sector-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(13, 110, 253, 0.1);
+            border-radius: 10px;
+        }
+    </style>
+}

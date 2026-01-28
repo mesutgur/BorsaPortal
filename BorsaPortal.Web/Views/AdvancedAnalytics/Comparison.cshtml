@@ -1,0 +1,335 @@
+@using BorsaPortal.Domain.Entities
+@{
+    ViewBag.Title = "Hisse Karşılaştırma";
+    var companies = ViewBag.Companies as List<Company>;
+    var comparisonData = ViewBag.ComparisonData as dynamic;
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-arrow-left-right"></i> Hisse Karşılaştırma</h2>
+                <p class="text-muted">Portföyünüzdeki hisseleri karşılaştırın ve performanslarını analiz edin</p>
+            </div>
+            <div>
+                <a href="@Url.Action("Index", "AdvancedAnalytics")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Gelişmiş Analize Dön
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Selection Form -->
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-check2-square"></i> Karşılaştırılacak Hisseleri Seçin</h5>
+    </div>
+    <div class="card-body">
+        @using (Html.BeginForm("CompareStocks", "AdvancedAnalytics", FormMethod.Post))
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <div class="col-lg-10">
+                    <p class="text-muted small mb-3">
+                        <i class="bi bi-info-circle"></i> En az 2, en fazla 5 hisse seçebilirsiniz.
+                    </p>
+                    <div class="row g-3">
+                        @if (companies != null && companies.Any())
+                        {
+                            foreach (var company in companies)
+                            {
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="companyIds"
+                                               value="@company.Id" id="company_@company.Id">
+                                        <label class="form-check-label" for="company_@company.Id">
+                                            <strong>@company.Code</strong><br />
+                                            <small class="text-muted">@company.Name</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="col-12">
+                                <p class="text-muted text-center py-3">Portföyünüzde karşılaştırılacak hisse bulunmuyor.</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="col-lg-2 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-graph-up"></i> Karşılaştır
+                    </button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Comparison Results -->
+@if (comparisonData != null && ((IEnumerable<dynamic>)comparisonData).Any())
+{
+    var data = ((IEnumerable<dynamic>)comparisonData).ToList();
+
+    <!-- Summary Cards -->
+    <div class="row mb-4 g-3">
+        @foreach (var item in data)
+        {
+            <div class="col-12 col-md-6 col-xl-4">
+                <div class="card h-100 border-@(item.ProfitLoss >= 0 ? "success" : "danger")">
+                    <div class="card-header bg-@(item.ProfitLoss >= 0 ? "success" : "danger") text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-building"></i> @item.Company.Code
+                        </h5>
+                        <small>@item.Company.Name</small>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="text-muted small">Toplam Adet</div>
+                                <strong>@item.TotalQuantity.ToString("N2")</strong>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">Sektör</div>
+                                <span class="badge bg-secondary">@(item.Company.Sector?.Name ?? "N/A")</span>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">Ort. Alış</div>
+                                <strong>₺@item.AverageBuyPrice.ToString("N2")</strong>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">Güncel Fiyat</div>
+                                <strong>₺@item.CurrentPrice.ToString("N2")</strong>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">Toplam Maliyet</div>
+                                <strong>₺@item.TotalCost.ToString("N2")</strong>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-muted small">Güncel Değer</div>
+                                <strong>₺@item.TotalValue.ToString("N2")</strong>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="text-muted small">Kar/Zarar</div>
+                                <h4 class="mb-0 text-@(item.ProfitLoss >= 0 ? "success" : "danger")">
+                                    @(item.ProfitLoss >= 0 ? "+" : "")₺@item.ProfitLoss.ToString("N2")
+                                </h4>
+                            </div>
+                            <div class="text-end">
+                                <div class="text-muted small">Getiri Oranı</div>
+                                <h4 class="mb-0 text-@(item.ProfitLossPercentage >= 0 ? "success" : "danger")">
+                                    @(item.ProfitLossPercentage >= 0 ? "+" : "")@item.ProfitLossPercentage.ToString("N2")%
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Comparison Charts -->
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Değer Karşılaştırması</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="valueComparisonChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-percent"></i> Getiri Karşılaştırması</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="performanceComparisonChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Comparison Table -->
+    <div class="card">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-table"></i> Detaylı Karşılaştırma Tablosu</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Hisse</th>
+                            <th>Sektör</th>
+                            <th class="text-end">Adet</th>
+                            <th class="text-end">Ort. Alış</th>
+                            <th class="text-end">Güncel Fiyat</th>
+                            <th class="text-end">Maliyet</th>
+                            <th class="text-end">Değer</th>
+                            <th class="text-end">K/Z (₺)</th>
+                            <th class="text-end">K/Z (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in data)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@item.Company.Code</strong><br />
+                                    <small class="text-muted">@item.Company.Name</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary">@(item.Company.Sector?.Name ?? "N/A")</span>
+                                </td>
+                                <td class="text-end">@item.TotalQuantity.ToString("N2")</td>
+                                <td class="text-end">₺@item.AverageBuyPrice.ToString("N2")</td>
+                                <td class="text-end">₺@item.CurrentPrice.ToString("N2")</td>
+                                <td class="text-end">₺@item.TotalCost.ToString("N2")</td>
+                                <td class="text-end">₺@item.TotalValue.ToString("N2")</td>
+                                <td class="text-end">
+                                    <span class="fw-bold text-@(item.ProfitLoss >= 0 ? "success" : "danger")">
+                                        @(item.ProfitLoss >= 0 ? "+" : "")₺@item.ProfitLoss.ToString("N2")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge @(item.ProfitLossPercentage >= 0 ? "bg-success" : "bg-danger")">
+                                        @(item.ProfitLossPercentage >= 0 ? "+" : "")@item.ProfitLossPercentage.ToString("N2")%
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light fw-bold">
+                        <tr>
+                            <td colspan="5" class="text-end">TOPLAM:</td>
+                            <td class="text-end">₺@data.Sum(x => x.TotalCost).ToString("N2")</td>
+                            <td class="text-end">₺@data.Sum(x => x.TotalValue).ToString("N2")</td>
+                            <td class="text-end">
+                                <span class="text-@(data.Sum(x => x.ProfitLoss) >= 0 ? "success" : "danger")">
+                                    @(data.Sum(x => x.ProfitLoss) >= 0 ? "+" : "")₺@data.Sum(x => x.ProfitLoss).ToString("N2")
+                                </span>
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Value Comparison Chart
+            var valueCtx = document.getElementById('valueComparisonChart').getContext('2d');
+            new Chart(valueCtx, {
+                type: 'bar',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", data.Select(x => $"'{x.Company.Code}'")))],
+                    datasets: [
+                        {
+                            label: 'Toplam Maliyet',
+                            data: [@Html.Raw(string.Join(",", data.Select(x => x.TotalCost.ToString("F2").Replace(",", "."))))],
+                            backgroundColor: '#0dcaf0'
+                        },
+                        {
+                            label: 'Güncel Değer',
+                            data: [@Html.Raw(string.Join(",", data.Select(x => x.TotalValue.ToString("F2").Replace(",", "."))))],
+                            backgroundColor: '#198754'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ₺' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₺' + value.toLocaleString('tr-TR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Performance Comparison Chart
+            var perfCtx = document.getElementById('performanceComparisonChart').getContext('2d');
+            new Chart(perfCtx, {
+                type: 'bar',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", data.Select(x => $"'{x.Company.Code}'")))],
+                    datasets: [{
+                        label: 'Getiri Oranı (%)',
+                        data: [@Html.Raw(string.Join(",", data.Select(x => x.ProfitLossPercentage.ToString("F2").Replace(",", "."))))],
+                        backgroundColor: @Html.Raw("[" + string.Join(",", data.Select(x => x.ProfitLossPercentage >= 0 ? "'#198754'" : "'#dc3545'")) + "]")
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Getiri: %' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return '%' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    }
+}
+else
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-arrow-left-right" style="font-size: 4rem; opacity: 0.2;"></i>
+            <h5 class="mt-3 text-muted">Henüz Karşılaştırma Yapılmadı</h5>
+            <p class="text-muted">Yukarıdan en az 2 hisse seçip "Karşılaştır" butonuna tıklayın.</p>
+        </div>
+    </div>
+}

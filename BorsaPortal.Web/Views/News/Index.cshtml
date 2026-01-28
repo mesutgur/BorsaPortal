@@ -1,0 +1,168 @@
+@model List<BorsaPortal.Domain.Entities.News>
+@using BorsaPortal.Domain.Entities
+
+@{
+    ViewBag.Title = "Haberler - Borsa Portal";
+    var sectors = ViewBag.Sectors as List<Sector> ?? new List<Sector>();
+    var companies = ViewBag.Companies as List<Company> ?? new List<Company>();
+
+    int currentPage = 1;
+    int totalPages = 1;
+    int totalCount = 0;
+
+    if (ViewBag.CurrentPage != null) { currentPage = (int)ViewBag.CurrentPage; }
+    if (ViewBag.TotalPages != null) { totalPages = (int)ViewBag.TotalPages; }
+    if (ViewBag.TotalCount != null) { totalCount = (int)ViewBag.TotalCount; }
+
+    var sectorId = ViewBag.SectorId as int?;
+    var companyId = ViewBag.CompanyId as int?;
+}
+
+<div class="mb-4">
+    <h1 class="h2">Haberler</h1>
+    <p class="text-muted">Borsa ve finans dünyasından son haberler</p>
+</div>
+
+<!-- Filtreler -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" action="@Url.Action("Index")" class="row g-3">
+            <div class="col-md-4">
+                <label for="sectorFilter" class="form-label">Sektör</label>
+                <select name="sectorId" id="sectorFilter" class="form-select">
+                    <option value="">Tüm Sektörler</option>
+                    @foreach (var sector in sectors)
+                    {
+                        <option value="@sector.Id" @(sectorId == sector.Id ? "selected" : "")>@sector.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="companyFilter" class="form-label">Şirket</label>
+                <select name="companyId" id="companyFilter" class="form-select">
+                    <option value="">Tüm Şirketler</option>
+                    @foreach (var company in companies)
+                    {
+                        <option value="@company.Id" @(companyId == company.Id ? "selected" : "")>@company.Name (@company.Code)</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filtrele</button>
+                <a href="@Url.Action("Index")" class="btn btn-outline-secondary">Temizle</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (ViewBag.SelectedSector != null || ViewBag.SelectedCompany != null)
+{
+    <div class="alert alert-info mb-4">
+        <i class="bi bi-filter"></i>
+        Filtreleniyor:
+        @if (ViewBag.SelectedSector != null)
+        {
+            <span class="badge bg-primary">Sektör: @ViewBag.SelectedSector</span>
+        }
+        @if (ViewBag.SelectedCompany != null)
+        {
+            <span class="badge bg-primary">Şirket: @ViewBag.SelectedCompany</span>
+        }
+        <span class="text-muted">(@totalCount sonuç)</span>
+    </div>
+}
+
+<!-- Haberler Listesi -->
+@if (Model.Any())
+{
+    <div class="row g-4 mb-4">
+        @foreach (var news in Model)
+        {
+            <div class="col-md-4">
+                <div class="card h-100 shadow-sm">
+                    @if (!string.IsNullOrEmpty(news.ImageUrl))
+                    {
+                        <img src="@news.ImageUrl" class="card-img-top" alt="@news.Title" style="height: 200px; object-fit: cover;">
+                    }
+                    else
+                    {
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-newspaper" style="font-size: 3rem; color: #ccc;"></i>
+                        </div>
+                    }
+                    <div class="card-body d-flex flex-column">
+                        @if (news.IsFeatured)
+                        {
+                            <span class="badge bg-danger mb-2 align-self-start">ÖNE ÇIKAN</span>
+                        }
+                        <h5 class="card-title">@news.Title</h5>
+                        <p class="card-text text-muted small flex-grow-1">
+                            @if (!string.IsNullOrEmpty(news.Summary))
+                            {
+                                @(news.Summary.Length > 120 ? news.Summary.Substring(0, 120) + "..." : news.Summary)
+                            }
+                        </p>
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> @news.PublishDate.ToString("dd MMM yyyy HH:mm")
+                                </small>
+                                <small class="text-muted">
+                                    <i class="bi bi-eye"></i> @news.ViewCount
+                                </small>
+                            </div>
+                            @if (!string.IsNullOrEmpty(news.Source))
+                            {
+                                <small class="text-muted d-block mb-2">
+                                    <i class="bi bi-link-45deg"></i> @news.Source
+                                </small>
+                            }
+                            <a href="@Url.Action("Details", new { id = news.Id })" class="btn btn-primary btn-sm w-100">Devamını Oku</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Sayfalama -->
+    if (totalPages > 1)
+    {
+        <nav aria-label="Sayfa navigasyonu">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage - 1, sectorId = sectorId, companyId = companyId })">Önceki</a>
+                </li>
+
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(i == currentPage ? "active" : "")">
+                        <a class="page-link" href="@Url.Action("Index", new { page = i, sectorId = sectorId, companyId = companyId })">@i</a>
+                    </li>
+                }
+
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link" href="@Url.Action("Index", new { page = currentPage + 1, sectorId = sectorId, companyId = companyId })">Sonraki</a>
+                </li>
+            </ul>
+        </nav>
+    }
+}
+else
+{
+    <div class="alert alert-warning text-center">
+        <i class="bi bi-info-circle me-2"></i>
+        Henüz haber bulunmamaktadır.
+    </div>
+}
+
+<style>
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+    }
+</style>

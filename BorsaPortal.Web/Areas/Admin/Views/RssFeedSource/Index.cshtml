@@ -1,0 +1,174 @@
+@model IEnumerable<BorsaPortal.Domain.Entities.RssFeedSource>
+
+@{
+    ViewBag.Title = "RSS Feed Kaynakları";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>
+        <i class="bi bi-rss-fill"></i> RSS Feed Kaynakları
+    </h2>
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Yeni Kaynak Ekle
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        Henüz RSS feed kaynağı eklenmemiş. Haber otomasyonunu başlatmak için RSS feed kaynakları ekleyin.
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Durum</th>
+                            <th>Kaynak Adı</th>
+                            <th>Feed URL</th>
+                            <th>Sektör</th>
+                            <th>Çekilme Aralığı</th>
+                            <th>Son Çekilme</th>
+                            <th>Toplam Haber</th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var source in Model)
+                        {
+                            <tr>
+                                <td>
+                                    @if (source.IsActive)
+                                    {
+                                        <span class="badge bg-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Pasif</span>
+                                    }
+                                </td>
+                                <td>
+                                    <strong>@source.Name</strong>
+                                    @if (!string.IsNullOrEmpty(source.Description))
+                                    {
+                                        <br />
+                                        <small class="text-muted">@source.Description</small>
+                                    }
+                                </td>
+                                <td>
+                                    <a href="@source.FeedUrl" target="_blank" class="text-decoration-none" title="@source.FeedUrl">
+                                        @(source.FeedUrl.Length > 50 ? source.FeedUrl.Substring(0, 50) + "..." : source.FeedUrl)
+                                        <i class="bi bi-box-arrow-up-right small"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                    @if (source.Sector != null)
+                                    {
+                                        <span class="badge bg-info">@source.Sector.Name</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">-</span>
+                                    }
+                                </td>
+                                <td>
+                                    @source.FetchIntervalMinutes dakika
+                                </td>
+                                <td>
+                                    @if (source.LastFetchedAt.HasValue)
+                                    {
+                                        <span title="@source.LastFetchedAt.Value.ToString("dd.MM.yyyy HH:mm")">
+                                            @GetTimeDifference(source.LastFetchedAt.Value)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Henüz çekilmedi</span>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">@source.ItemsFetchedCount</span>
+                                </td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="@Url.Action("Edit", new { id = source.Id })" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-pencil"></i> Düzenle
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-warning toggle-active" data-id="@source.Id">
+                                            <i class="bi bi-power"></i> @(source.IsActive ? "Pasife Al" : "Aktif Et")
+                                        </button>
+                                        <a href="@Url.Action("Delete", new { id = source.Id })" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bu RSS kaynağını silmek istediğinizden emin misiniz?');">
+                                            <i class="bi bi-trash"></i> Sil
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-light mt-3">
+        <i class="bi bi-info-circle"></i>
+        <strong>Bilgi:</strong> RSS feed kaynakları otomatik olarak belirlenen aralıklarda kontrol edilir ve yeni haberler sisteme eklenir.
+        <a href="@Url.Action("Index", "NewsAutomation")" class="alert-link">Haber Otomasyonu Panosu</a>'ndan manuel senkronizasyon yapabilirsiniz.
+    </div>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.toggle-active').click(function () {
+                var btn = $(this);
+                var sourceId = btn.data('id');
+
+                $.ajax({
+                    url: '@Url.Action("ToggleActive")',
+                    type: 'POST',
+                    data: { id: sourceId },
+                    success: function (response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Hata: ' + response.message);
+                        }
+                    },
+                    error: function () {
+                        alert('İşlem sırasında bir hata oluştu.');
+                    }
+                });
+            });
+        });
+    </script>
+}
+
+@functions {
+    string GetTimeDifference(DateTime dateTime)
+    {
+        var diff = DateTime.Now - dateTime;
+
+        if (diff.TotalMinutes < 60)
+            return $"{(int)diff.TotalMinutes} dakika önce";
+        if (diff.TotalHours < 24)
+            return $"{(int)diff.TotalHours} saat önce";
+        if (diff.TotalDays < 7)
+            return $"{(int)diff.TotalDays} gün önce";
+
+        return dateTime.ToString("dd.MM.yyyy");
+    }
+}

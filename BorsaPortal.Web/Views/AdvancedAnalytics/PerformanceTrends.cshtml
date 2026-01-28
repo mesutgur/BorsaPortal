@@ -1,0 +1,392 @@
+@using BorsaPortal.Application.Services
+@{
+    ViewBag.Title = "Performans Trendleri";
+    var portfolioSummary = ViewBag.PortfolioSummary as PortfolioSummary;
+    var monthlyData = ViewBag.MonthlyData as dynamic;
+    var selectedMonths = (int)(ViewBag.SelectedMonths ?? 3);
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2><i class="bi bi-graph-up"></i> Performans Trendleri</h2>
+                <p class="text-muted">Portföy performansınızın zaman bazlı analizi</p>
+            </div>
+            <div>
+                <a href="@Url.Action("Index", "AdvancedAnalytics")" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Gelişmiş Analize Dön
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Period Selector -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h6 class="mb-0"><i class="bi bi-calendar-range"></i> Zaman Periyodu Seç</h6>
+            </div>
+            <div class="col-md-6">
+                <div class="btn-group w-100" role="group">
+                    <a href="@Url.Action("PerformanceTrends", new { months = 3 })"
+                       class="btn btn-@(selectedMonths == 3 ? "primary" : "outline-primary")">
+                        Son 3 Ay
+                    </a>
+                    <a href="@Url.Action("PerformanceTrends", new { months = 6 })"
+                       class="btn btn-@(selectedMonths == 6 ? "primary" : "outline-primary")">
+                        Son 6 Ay
+                    </a>
+                    <a href="@Url.Action("PerformanceTrends", new { months = 12 })"
+                       class="btn btn-@(selectedMonths == 12 ? "primary" : "outline-primary")">
+                        Son 1 Yıl
+                    </a>
+                    <a href="@Url.Action("PerformanceTrends", new { months = 24 })"
+                       class="btn btn-@(selectedMonths == 24 ? "primary" : "outline-primary")">
+                        Son 2 Yıl
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (monthlyData != null && ((IEnumerable<dynamic>)monthlyData).Any())
+{
+    var data = ((IEnumerable<dynamic>)monthlyData).ToList();
+
+    <!-- Summary Cards -->
+    <div class="row mb-4 g-3">
+        <div class="col-6 col-lg-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small mb-2">Dönem Yatırımı</h6>
+                    <h4 class="mb-0 text-primary">₺@data.Sum(x => x.TotalInvested).ToString("N2")</h4>
+                    <small class="text-muted">@data.Sum(x => x.Count) işlem</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small mb-2">Güncel Değer</h6>
+                    <h4 class="mb-0 text-info">₺@data.Sum(x => x.TotalValue).ToString("N2")</h4>
+                    <small class="text-muted">toplam değer</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card border-@(data.Sum(x => x.ProfitLoss) >= 0 ? "success" : "danger")">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small mb-2">Toplam K/Z</h6>
+                    <h4 class="mb-0 text-@(data.Sum(x => x.ProfitLoss) >= 0 ? "success" : "danger")">
+                        @(data.Sum(x => x.ProfitLoss) >= 0 ? "+" : "")₺@data.Sum(x => x.ProfitLoss).ToString("N2")
+                    </h4>
+                    <small class="text-muted">net kazanç</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h6 class="text-muted text-uppercase small mb-2">Ort. Aylık</h6>
+                    <h4 class="mb-0 text-warning">
+                        ₺@((data.Sum(x => x.ProfitLoss) / data.Count).ToString("N2"))
+                    </h4>
+                    <small class="text-muted">aylık ortalama</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trend Charts -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Yatırım ve Değer Trendi</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="investmentTrendChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-cash-stack"></i> Aylık Kar/Zarar Trendi</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="profitLossTrendChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-activity"></i> İşlem Hacmi Trendi</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="volumeTrendChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Details Table -->
+    <div class="card">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-calendar3"></i> Aylık Detaylar</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Dönem</th>
+                            <th class="text-end">İşlem Sayısı</th>
+                            <th class="text-end">Toplam Yatırım</th>
+                            <th class="text-end">Güncel Değer</th>
+                            <th class="text-end">Kar/Zarar</th>
+                            <th class="text-end">K/Z Oranı</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var month in data)
+                        {
+                            var profitLossPercentage = month.TotalInvested > 0 ? (month.ProfitLoss / month.TotalInvested) * 100 : 0;
+
+                            <tr>
+                                <td>
+                                    <strong>@month.Date.ToString("MMMM yyyy")</strong>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge bg-primary">@month.Count</span>
+                                </td>
+                                <td class="text-end">₺@month.TotalInvested.ToString("N2")</td>
+                                <td class="text-end">₺@month.TotalValue.ToString("N2")</td>
+                                <td class="text-end">
+                                    <span class="fw-bold text-@(month.ProfitLoss >= 0 ? "success" : "danger")">
+                                        @(month.ProfitLoss >= 0 ? "+" : "")₺@month.ProfitLoss.ToString("N2")
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="badge @(profitLossPercentage >= 0 ? "bg-success" : "bg-danger")">
+                                        @(profitLossPercentage >= 0 ? "+" : "")@profitLossPercentage.ToString("N2")%
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot class="table-light fw-bold">
+                        <tr>
+                            <td>TOPLAM</td>
+                            <td class="text-end">@data.Sum(x => x.Count)</td>
+                            <td class="text-end">₺@data.Sum(x => x.TotalInvested).ToString("N2")</td>
+                            <td class="text-end">₺@data.Sum(x => x.TotalValue).ToString("N2")</td>
+                            <td class="text-end">
+                                <span class="text-@(data.Sum(x => x.ProfitLoss) >= 0 ? "success" : "danger")">
+                                    @(data.Sum(x => x.ProfitLoss) >= 0 ? "+" : "")₺@data.Sum(x => x.ProfitLoss).ToString("N2")
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                @{
+                                    var totalPercentage = data.Sum(x => x.TotalInvested) > 0
+                                        ? (data.Sum(x => x.ProfitLoss) / data.Sum(x => x.TotalInvested)) * 100
+                                        : 0;
+                                }
+                                <span class="badge @(totalPercentage >= 0 ? "bg-success" : "bg-danger")">
+                                    @(totalPercentage >= 0 ? "+" : "")@totalPercentage.ToString("N2")%
+                                </span>
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    @section Scripts {
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Investment Trend Chart
+            var investmentCtx = document.getElementById('investmentTrendChart').getContext('2d');
+            new Chart(investmentCtx, {
+                type: 'line',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", data.Select(x => $"'{x.Period}'")))],
+                    datasets: [
+                        {
+                            label: 'Yatırım',
+                            data: [@Html.Raw(string.Join(",", data.Select(x => x.TotalInvested.ToString("F2").Replace(",", "."))))],
+                            borderColor: '#0dcaf0',
+                            backgroundColor: 'rgba(13, 202, 240, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Güncel Değer',
+                            data: [@Html.Raw(string.Join(",", data.Select(x => x.TotalValue.ToString("F2").Replace(",", "."))))],
+                            borderColor: '#198754',
+                            backgroundColor: 'rgba(25, 135, 84, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': ₺' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₺' + value.toLocaleString('tr-TR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Profit/Loss Trend Chart
+            var plCtx = document.getElementById('profitLossTrendChart').getContext('2d');
+            new Chart(plCtx, {
+                type: 'bar',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", data.Select(x => $"'{x.Period}'")))],
+                    datasets: [{
+                        label: 'Kar/Zarar',
+                        data: [@Html.Raw(string.Join(",", data.Select(x => x.ProfitLoss.ToString("F2").Replace(",", "."))))],
+                        backgroundColor: @Html.Raw("[" + string.Join(",", data.Select(x => x.ProfitLoss >= 0 ? "'rgba(25, 135, 84, 0.7)'" : "'rgba(220, 53, 69, 0.7)'")) + "]"),
+                        borderColor: @Html.Raw("[" + string.Join(",", data.Select(x => x.ProfitLoss >= 0 ? "'#198754'" : "'#dc3545'")) + "]"),
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'K/Z: ₺' + context.parsed.y.toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                callback: function(value) {
+                                    return '₺' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Volume Trend Chart
+            var volumeCtx = document.getElementById('volumeTrendChart').getContext('2d');
+            new Chart(volumeCtx, {
+                type: 'line',
+                data: {
+                    labels: [@Html.Raw(string.Join(",", data.Select(x => $"'{x.Period}'")))],
+                    datasets: [{
+                        label: 'İşlem Sayısı',
+                        data: [@Html.Raw(string.Join(",", data.Select(x => x.Count)))],
+                        borderColor: '#0d6efd',
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    }
+}
+else
+{
+    <div class="card">
+        <div class="card-body text-center py-5">
+            <i class="bi bi-graph-up" style="font-size: 4rem; opacity: 0.2;"></i>
+            <h5 class="mt-3 text-muted">Seçili Dönemde Veri Yok</h5>
+            <p class="text-muted">Bu tarih aralığında işlem bulunmuyor. Farklı bir periyot seçmeyi deneyin.</p>
+        </div>
+    </div>
+}
+
+<!-- Current Portfolio Summary -->
+@if (portfolioSummary != null)
+{
+    <div class="card mt-4 border-secondary">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-briefcase"></i> Güncel Portföy Özeti</h5>
+        </div>
+        <div class="card-body">
+            <div class="row text-center g-3">
+                <div class="col-6 col-md-2">
+                    <div class="text-muted small">Toplam Değer</div>
+                    <h5 class="mb-0">₺@portfolioSummary.TotalValue.ToString("N2")</h5>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="text-muted small">Maliyet</div>
+                    <h5 class="mb-0">₺@portfolioSummary.TotalCost.ToString("N2")</h5>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="text-muted small">K/Z</div>
+                    <h5 class="mb-0 text-@(portfolioSummary.TotalProfitLoss >= 0 ? "success" : "danger")">
+                        ₺@portfolioSummary.TotalProfitLoss.ToString("N2")
+                    </h5>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="text-muted small">Getiri %</div>
+                    <h5 class="mb-0 text-@(portfolioSummary.TotalProfitLossPercentage >= 0 ? "success" : "danger")">
+                        @(portfolioSummary.TotalProfitLossPercentage >= 0 ? "+" : "")@portfolioSummary.TotalProfitLossPercentage.ToString("N2")%
+                    </h5>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="text-muted small">Şirket</div>
+                    <h5 class="mb-0">@portfolioSummary.TotalCompanies</h5>
+                </div>
+                <div class="col-6 col-md-2">
+                    <div class="text-muted small">Hisse</div>
+                    <h5 class="mb-0">@portfolioSummary.TotalShares.ToString("N0")</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+}
